@@ -280,6 +280,8 @@ class tree {
   }
   void for_each_in(const non_leaf *n, aabb area, auto &fn) const noexcept {
     for (auto &e : *n) {
+      if (!intersect(e->area(), area))
+        continue;
       if (e->is_leaf()) {
         for_each_in(static_cast<const leaf *>(&*e), area, fn);
       } else {
