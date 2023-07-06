@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 import hai;
+import traits;
 
 struct point {
   float x;
@@ -10,6 +11,10 @@ struct point {
 struct aabb {
   point a;
   point b;
+};
+struct leaf_data {
+  unsigned id;
+  aabb area;
 };
 
 constexpr float area_of(const aabb &a) {
@@ -50,19 +55,30 @@ class non_leaf : public node, public hai::varray<hai::uptr<node>> {
 public:
   [[nodiscard]] bool is_leaf() const noexcept { return false; }
 };
-class leaf : public node {
+class leaf : public node, hai::varray<leaf_data> {
 public:
   [[nodiscard]] bool is_leaf() const noexcept { return true; }
+
+  [[nodiscard]] bool add(unsigned id, aabb area) noexcept {
+    if (this->size() == this->capacity()) {
+      return false;
+    }
+    this->push_back(leaf_data{id, area});
+    return true;
+  }
+
+  using varray::operator[];
+  using varray::size;
 };
 
 class tree {
   hai::uptr<node> m_root{new leaf{}};
 
-  node *choose_leaf(const aabb &area) {
+  leaf *choose_leaf(const aabb &area) {
     auto *n = &*m_root;
     while (!n->is_leaf())
       n = cl3_choose_subtree(static_cast<non_leaf *>(n), area);
-    return n;
+    return static_cast<leaf *>(n);
   }
 
   node *cl3_choose_subtree(non_leaf *n, const aabb &area) {
@@ -83,10 +99,39 @@ class tree {
     return f;
   }
 
+  template <typename Tp> void quad_split(Tp *n, Tp *l, Tp *ll) {
+    unsigned s1;
+    unsigned s2;
+    pick_seeds(n, s1, s2);
+    (*l)[0] = traits::move((*n)[s1]);
+    (*ll)[0] = traits::move((*n)[s2]);
+  }
+  template <typename Tp>
+  void pick_seeds(const Tp *n, unsigned &s1, unsigned &s2) {
+    auto worst_d = 0.f;
+    for (auto e1 = 0U; e1 < n->size(); e1++) {
+      for (auto e2 = e1 + 1; e2 < n->size(); e2++) {
+        auto e1i = (*n)[e1].area;
+        auto e2i = (*n)[e2].area;
+        auto j = merge(e1i, e2i);
+        auto d = area_of(j) - area_of(e1i) - area_of(e2i);
+        if (d > worst_d) {
+          worst_d = d;
+          s1 = e1;
+          s2 = e2;
+        }
+      }
+    }
+  }
+
 public:
   void insert(unsigned id, aabb area) {
     auto l = choose_leaf(area);
-    // I2
+    if (!l->add(id, area)) {
+      hai::uptr<node> new_l{new leaf{}};
+      hai::uptr<node> ll{new leaf{}};
+      quad_split(&*l, static_cast<leaf *>(&*new_l), static_cast<leaf *>(&*ll));
+    }
   }
 };
 
