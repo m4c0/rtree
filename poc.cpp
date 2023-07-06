@@ -348,28 +348,28 @@ point normie(point p, aabb minmax) {
   return {800.f * (p.x - minmax.a.x) / w, 800.f * (p.y - minmax.a.y) / h};
 }
 
-void rect(FILE *out, aabb area, const char *colour) {
+void rect(FILE *out, aabb area, const char *colour, unsigned ind) {
   point a = area.a;
   point b = area.b;
   fprintf(out,
-          "<rect x='%f' y='%f' width='%f' height='%f' "
+          "%*s<rect x='%f' y='%f' width='%f' height='%f' "
           "style='fill:none;stroke:%s'/>\n",
-          a.x, a.y, b.x - a.x, b.y - a.y, colour);
+          ind, "", a.x, a.y, b.x - a.x, b.y - a.y, colour);
 }
 
-void dump_tree(FILE *out, const leaf *n) {
+void dump_tree(FILE *out, const leaf *n, unsigned ind) {
   for (const auto &d : *n) {
-    rect(out, d.area, "green");
+    rect(out, d.area, "green", ind);
   }
 }
-void dump_tree(FILE *out, const non_leaf *n) {
+void dump_tree(FILE *out, const non_leaf *n, unsigned ind) {
   for (const auto &d : *n) {
     if (d->is_leaf()) {
-      rect(out, d->area(), "blue");
-      dump_tree(out, static_cast<const leaf *>(&*d));
+      rect(out, d->area(), "blue", ind);
+      dump_tree(out, static_cast<const leaf *>(&*d), ind + 1);
     } else {
-      rect(out, d->area(), "red");
-      dump_tree(out, static_cast<const non_leaf *>(&*d));
+      rect(out, d->area(), "red", ind);
+      dump_tree(out, static_cast<const non_leaf *>(&*d), ind + 1);
     }
   }
 }
@@ -377,9 +377,9 @@ void dump_tree(FILE *out, const tree &t) {
   sitime::stopwatch w{};
 
   if (t.root()->is_leaf()) {
-    dump_tree(out, static_cast<const leaf *>(&*(t.root())));
+    dump_tree(out, static_cast<const leaf *>(&*(t.root())), 0);
   } else {
-    dump_tree(out, static_cast<const non_leaf *>(&*(t.root())));
+    dump_tree(out, static_cast<const non_leaf *>(&*(t.root())), 0);
   }
 
   silog::log(silog::info, "Tree dump in %dms", w.millis());
@@ -406,15 +406,20 @@ tree build_tree(FILE *in) {
 void test_tree(FILE *in, const tree &t) {
   sitime::stopwatch w{};
 
+  const aabb minmax = find_minmax(in);
   unsigned i = 100;
   read_file(in, [&](aabb area) {
+    area.a = normie(area.a, minmax);
+    area.b = normie(area.b, minmax);
+
     bool found = false;
     t.for_each_in(area, [&](auto ti, auto ta) {
       if (i == ti)
         found = true;
     });
     if (!found) {
-      silog::log(silog::error, "Missing element %d", i);
+      silog::log(silog::error, "Missing element %d @(%fx%f - %fx%f)", i,
+                 area.a.x, area.a.y, area.b.x, area.b.y);
       throw 0;
     }
 
