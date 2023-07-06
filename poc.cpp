@@ -62,10 +62,12 @@ public:
 };
 class non_leaf : public node, public hai::varray<hai::uptr<node>> {
 public:
+  using varray::varray;
   [[nodiscard]] bool is_leaf() const noexcept { return false; }
 };
 class leaf : public node, public hai::varray<leaf_data> {
 public:
+  using varray::varray;
   [[nodiscard]] bool is_leaf() const noexcept { return true; }
 };
 
@@ -84,7 +86,9 @@ constexpr auto take(auto *n, unsigned i) noexcept {
 }
 
 class tree {
-  hai::uptr<node> m_root{new leaf{}};
+  static constexpr const auto node_size = 16;
+
+  hai::uptr<node> m_root{new leaf{node_size}};
 
   leaf *choose_leaf(const aabb &area) {
     auto *n = &*m_root;
@@ -215,7 +219,7 @@ class tree {
         return;
 
       auto old = traits::move(m_root);
-      auto *new_nl = new non_leaf();
+      auto *new_nl = new non_leaf(node_size);
       new_nl->push_back(traits::move(old));
       new_nl->push_back(traits::move(nn));
       m_root = hai::uptr<node>(new_nl);
@@ -229,7 +233,7 @@ class tree {
       nn->set_area(at3_adjust(static_cast<Tp *>(&*nn)));
       p->push_back(traits::move(nn));
       if (!p->has_capacity()) {
-        hai::uptr<node> pp{new non_leaf{}};
+        hai::uptr<node> pp{new non_leaf{node_size}};
         quad_split(p, static_cast<non_leaf *>(&*pp));
         return adjust_tree(p, pp);
       }
@@ -258,7 +262,7 @@ public:
       return;
     }
 
-    hai::uptr<node> ll{new leaf{}};
+    hai::uptr<node> ll{new leaf{node_size}};
     quad_split(&*l, static_cast<leaf *>(&*ll));
     adjust_tree(l, ll);
   }
