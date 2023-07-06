@@ -384,9 +384,10 @@ int main(int argc, char **argv) {
   if (!out)
     return 2;
 
-  fprintf(out, "<!DOCTYPE html>\n");
-  fprintf(out, "<html><body><svg width=800 height=800>\n");
+  fprintf(out, "<?xml version='1.0' standalone='no'?>\n");
+  fprintf(out, "<svg width='800' height='800' version='1.1' "
+               "xmlns='http://www.w3.org/2000/svg'>\n");
   run_poc(in, out);
-  fprintf(out, "</svg></body></html>\n");
+  fprintf(out, "</svg>\n");
   fclose(out);
 }
