@@ -364,27 +364,27 @@ point normie(point p, aabb minmax) {
   return {800.f * (p.x - minmax.a.x) / w, 800.f * (p.y - minmax.a.y) / h};
 }
 
-void rect(FILE *out, aabb area, const char *colour, unsigned ind) {
+void rect(FILE *out, int id, aabb area, const char *colour, unsigned ind) {
   point a = area.a;
   point b = area.b;
   fprintf(out,
-          "%*s<rect x='%f' y='%f' width='%f' height='%f' "
+          "%*s<rect class='r-%d' x='%f' y='%f' width='%f' height='%f' "
           "style='fill:none;stroke:%s'/>\n",
-          ind, "", a.x, a.y, b.x - a.x, b.y - a.y, colour);
+          ind, "", id, a.x, a.y, b.x - a.x, b.y - a.y, colour);
 }
 
 void dump_tree(FILE *out, const leaf *n, unsigned ind) {
   for (const auto &d : *n) {
-    rect(out, d.area, "green", ind);
+    rect(out, d.id, d.area, "green", ind);
   }
 }
 void dump_tree(FILE *out, const non_leaf *n, unsigned ind) {
   for (const auto &d : *n) {
     if (d->is_leaf()) {
-      rect(out, d->area(), "blue", ind);
+      rect(out, 0, d->area(), "blue", ind);
       dump_tree(out, static_cast<const leaf *>(&*d), ind + 1);
     } else {
-      rect(out, d->area(), "red", ind);
+      rect(out, 0, d->area(), "red", ind);
       dump_tree(out, static_cast<const non_leaf *>(&*d), ind + 1);
     }
   }
