@@ -111,19 +111,21 @@ class tree {
     return f;
   }
 
-  template <typename Tp> void quad_split(Tp *n, Tp *l, Tp *ll) {
+  template <typename Tp> void quad_split(Tp *n, Tp *ll) {
+    Tp l{};
+
     // QS1
     auto [s1, s2] = pick_seeds(n);
     if (s1 > s2) {
-      l->push_back(take(n, s1));
+      l.push_back(take(n, s1));
       ll->push_back(take(n, s2));
     } else {
-      l->push_back(take(n, s2));
+      l.push_back(take(n, s2));
       ll->push_back(take(n, s1));
     }
     while (n->size() > 0) {
-      if (l->size() + n->size() == node::minimum) {
-        l->push_back(take(n, 0));
+      if (l.size() + n->size() == node::minimum) {
+        l.push_back(take(n, 0));
         continue;
       }
       if (ll->size() + n->size() == node::minimum) {
@@ -132,14 +134,14 @@ class tree {
       }
 
       // QS3
-      auto next = take(n, pick_next(n, l, ll));
+      auto next = take(n, pick_next(n, &l, ll));
 
-      auto a_1 = area_of(l->area());
+      auto a_1 = area_of(l.area());
       auto a_2 = area_of(ll->area());
-      auto en_1 = area_of(merge(l->area(), aabb_of(next))) - a_1;
+      auto en_1 = area_of(merge(l.area(), aabb_of(next))) - a_1;
       auto en_2 = area_of(merge(ll->area(), aabb_of(next))) - a_2;
       if (en_1 > en_2) {
-        l->push_back(next);
+        l.push_back(next);
         continue;
       }
       if (en_2 > en_1) {
@@ -147,23 +149,25 @@ class tree {
         continue;
       }
       if (a_1 < a_2) {
-        l->push_back(next);
+        l.push_back(next);
         continue;
       }
       if (a_1 > a_2) {
         ll->push_back(next);
         continue;
       }
-      if (l->size() < ll->size()) {
-        l->push_back(next);
+      if (l.size() < ll->size()) {
+        l.push_back(next);
         continue;
       }
-      if (l->size() > ll->size()) {
+      if (l.size() > ll->size()) {
         ll->push_back(next);
         continue;
       }
-      l->push_back(next);
+      l.push_back(next);
     }
+
+    *n = traits::move(l);
   }
   template <typename Tp> auto pick_seeds(const Tp *n) {
     struct pair {
@@ -173,8 +177,8 @@ class tree {
     auto worst_d = 0.f;
     for (auto e1 = 0U; e1 < n->size(); e1++) {
       for (auto e2 = e1 + 1; e2 < n->size(); e2++) {
-        auto e1i = (*n)[e1].area;
-        auto e2i = (*n)[e2].area;
+        auto e1i = aabb_of((*n)[e1]);
+        auto e2i = aabb_of((*n)[e2]);
         auto j = merge(e1i, e2i);
         auto d = area_of(j) - area_of(e1i) - area_of(e2i);
         if (d > worst_d) {
@@ -205,9 +209,18 @@ class tree {
     return res;
   }
 
-  template <typename Tp> bool adjust_tree(Tp *n, hai::uptr<node> &nn) {
-    if (n == &*m_root)
-      return false;
+  template <typename Tp> void adjust_tree(Tp *n, hai::uptr<node> &nn) {
+    if (n == &*m_root) {
+      if (!nn)
+        return;
+
+      auto old = traits::move(m_root);
+      auto *new_nl = new non_leaf();
+      new_nl->push_back(traits::move(old));
+      new_nl->push_back(traits::move(nn));
+      m_root = hai::uptr<node>(new_nl);
+      return;
+    }
 
     auto p = n->parent();
     n->set_area(at3_adjust(n));
@@ -216,7 +229,9 @@ class tree {
       nn->set_area(at3_adjust(static_cast<Tp *>(&*nn)));
       p->push_back(traits::move(nn));
       if (!p->has_capacity()) {
-        // chora!
+        hai::uptr<node> pp{new non_leaf{}};
+        quad_split(p, static_cast<non_leaf *>(&*pp));
+        return adjust_tree(p, pp);
       }
     }
 
@@ -243,17 +258,9 @@ public:
       return;
     }
 
-    leaf new_l{};
     hai::uptr<node> ll{new leaf{}};
-    quad_split(&*l, &new_l, static_cast<leaf *>(&*ll));
-    *l = traits::move(new_l);
-    if (adjust_tree(l, ll)) {
-      auto old = traits::move(m_root);
-      auto *new_nl = new non_leaf();
-      new_nl->push_back(traits::move(old));
-      new_nl->push_back(traits::move(ll));
-      m_root = hai::uptr<node>(new_nl);
-    }
+    quad_split(&*l, static_cast<leaf *>(&*ll));
+    adjust_tree(l, ll);
   }
 };
 
