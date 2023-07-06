@@ -44,6 +44,9 @@ constexpr float enlargement(const aabb &orig, const aabb &ext) {
 class node {
   aabb m_area{};
 
+protected:
+  void merge_area(aabb area) noexcept { m_area = merge(m_area, area); }
+
 public:
   static constexpr const auto minimum = 4; // "m" in the article
 
@@ -56,6 +59,11 @@ public:
 class non_leaf : public node, public hai::varray<hai::uptr<node>> {
 public:
   [[nodiscard]] bool is_leaf() const noexcept { return false; }
+
+  void push_back(hai::uptr<node> d) noexcept {
+    varray::push_back(d);
+    merge_area(d->area());
+  }
 };
 class leaf : public node, public hai::varray<leaf_data> {
 public:
@@ -67,6 +75,10 @@ public:
     }
     this->push_back(leaf_data{id, area});
     return true;
+  }
+  void push_back(leaf_data d) noexcept {
+    varray::push_back(d);
+    merge_area(d.area);
   }
 };
 
