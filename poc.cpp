@@ -272,6 +272,8 @@ public:
     quad_split(&*l, static_cast<leaf *>(&*ll));
     adjust_tree(l, ll);
   }
+
+  [[nodiscard]] constexpr const auto &root() const noexcept { return m_root; }
 };
 
 void read_file(FILE *in, auto &&fn) {
@@ -323,23 +325,51 @@ point normie(point p, aabb minmax) {
   return {800.f * (p.x - minmax.a.x) / w, 800.f * (p.y - minmax.a.y) / h};
 }
 
+void rect(FILE *out, aabb area, const char *colour) {
+  point a = area.a;
+  point b = area.b;
+  fprintf(out,
+          "<rect x='%f' y='%f' width='%f' height='%f' "
+          "style='fill:none;stroke:%s'/>\n",
+          a.x, a.y, b.x - a.x, b.y - a.y, colour);
+}
+
+void dump_tree(FILE *out, const leaf *n) {
+  for (const auto &d : *n) {
+    rect(out, d.area, "green");
+  }
+}
+void dump_tree(FILE *out, const non_leaf *n) {
+  for (const auto &d : *n) {
+    if (d->is_leaf()) {
+      rect(out, d->area(), "blue");
+      dump_tree(out, static_cast<const leaf *>(&*d));
+    } else {
+      rect(out, d->area(), "red");
+      dump_tree(out, static_cast<const non_leaf *>(&*d));
+    }
+  }
+}
+
 void run_poc(FILE *in, FILE *out) {
   tree t{};
 
   const aabb minmax = find_minmax(in, out);
   unsigned i = 100;
   read_file(in, [&](aabb area) {
-    point a = normie(area.a, minmax);
-    point b = normie(area.b, minmax);
-
-    fprintf(out,
-            "<rect x='%f' y='%f' width='%f' height='%f' "
-            "style='fill:none;stroke:black'/>\n",
-            a.x, a.y, b.x - a.x, b.y - a.y);
+    area.a = normie(area.a, minmax);
+    area.b = normie(area.b, minmax);
+    rect(out, area, "black");
 
     // We could use the PLZ, but meh... forgot about it in the cleanup...
     t.insert(i++, area);
   });
+
+  if (t.root()->is_leaf()) {
+    dump_tree(out, static_cast<const leaf *>(&*(t.root())));
+  } else {
+    dump_tree(out, static_cast<const non_leaf *>(&*(t.root())));
+  }
 }
 
 int main(int argc, char **argv) {
