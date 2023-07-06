@@ -57,7 +57,7 @@ class non_leaf : public node, public hai::varray<hai::uptr<node>> {
 public:
   [[nodiscard]] bool is_leaf() const noexcept { return false; }
 };
-class leaf : public node, hai::varray<leaf_data> {
+class leaf : public node, public hai::varray<leaf_data> {
 public:
   [[nodiscard]] bool is_leaf() const noexcept { return true; }
 
@@ -68,10 +68,6 @@ public:
     this->push_back(leaf_data{id, area});
     return true;
   }
-
-  using varray::operator[];
-  using varray::pop_back;
-  using varray::size;
 };
 
 constexpr float area_of(const hai::uptr<node> &n) noexcept {
@@ -120,15 +116,20 @@ class tree {
   template <typename Tp> void quad_split(Tp *n, Tp *l, Tp *ll) {
     // QS1
     auto [s1, s2] = pick_seeds(n);
-    (*l)[0] = take(n, s1);  // TODO: "add" after "take"
-    (*ll)[0] = take(n, s2); // TODO: "add" after "take"
+    if (s1 > s2) {
+      l->push_back(take(n, s1));
+      ll->push_back(take(n, s2));
+    } else {
+      l->push_back(take(n, s2));
+      ll->push_back(take(n, s1));
+    }
     while (n->size() > 0) {
       if (l->size() + n->size() == node::minimum) {
-        // l->add(next);
+        l->push_back(take(n, 0));
         continue;
       }
       if (ll->size() + n->size() == node::minimum) {
-        // ll->add(next);
+        ll->push_back(take(n, 0));
         continue;
       }
 
@@ -140,30 +141,30 @@ class tree {
       auto en_1 = area_of(merge(l->area(), next)) - a_1;
       auto en_2 = area_of(merge(ll->area(), next)) - a_2;
       if (en_1 > en_2) {
-        // l->add(next);
+        l->push_back(next);
         continue;
       }
       if (en_2 > en_1) {
-        // ll->add(next);
+        ll->push_back(next);
         continue;
       }
       if (a_1 < a_2) {
-        // l->add(next);
+        l->push_back(next);
         continue;
       }
       if (a_1 > a_2) {
-        // ll->add(next);
+        ll->push_back(next);
         continue;
       }
       if (l->size() < ll->size()) {
-        // l->add(next);
+        l->push_back(next);
         continue;
       }
       if (l->size() > ll->size()) {
-        // ll->add(next);
+        ll->push_back(next);
         continue;
       }
-      // l->add(next);
+      l->push_back(next);
     }
   }
   template <typename Tp> auto pick_seeds(const Tp *n) {
