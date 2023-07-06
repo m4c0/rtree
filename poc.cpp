@@ -15,6 +15,20 @@ public:
   void insert(unsigned id, aabb area) {}
 };
 
+void read_file(FILE *in, auto &&fn) {
+  fseek(in, SEEK_SET, 0);
+
+  float qkm{};
+  float lat{};
+  float lng{};
+  while (fscanf(in, "%f,%f,%f\n", &qkm, &lat, &lng) == 3) {
+    point a{lat, lng};
+    point b{lat + qkm, lng + qkm};
+
+    fn(aabb{a, b});
+  }
+}
+
 float min(float a, float b, float c) {
   if (a < b && a < c)
     return a;
@@ -31,23 +45,14 @@ aabb find_minmax(FILE *in, FILE *out) {
       .b = {-9e15, -9e15},
   };
 
-  float qkm{};
-  float lat{};
-  float lng{};
-  while (fscanf(in, "%f,%f,%f\n", &qkm, &lat, &lng) == 3) {
-    point a{lat, lng};
-    point b{lat + qkm, lng + qkm};
-
-    minmax.a.x = min(minmax.a.x, a.x, b.x);
-    minmax.a.y = min(minmax.a.y, a.y, b.y);
-    minmax.b.x = max(minmax.b.x, a.x, b.x);
-    minmax.b.y = max(minmax.b.y, a.y, b.y);
-    // fprintf(out, "<!-- %f %f %f %f -- %f %f %f %f -->\n", a.x, a.y, b.x, b.y,
-    //         minmax.a.x, minmax.a.y, minmax.b.x, minmax.b.y);
-  }
+  read_file(in, [&](aabb area) {
+    minmax.a.x = min(minmax.a.x, area.a.x, area.b.x);
+    minmax.a.y = min(minmax.a.y, area.a.y, area.b.y);
+    minmax.b.x = max(minmax.b.x, area.a.x, area.b.x);
+    minmax.b.y = max(minmax.b.y, area.a.y, area.b.y);
+  });
   fprintf(out, "<!-- %f %f %f %f -->\n", minmax.a.x, minmax.a.y, minmax.b.x,
           minmax.b.y);
-  fseek(in, SEEK_SET, 0);
 
   return minmax;
 }
@@ -62,13 +67,9 @@ void run_poc(FILE *in, FILE *out) {
   tree t{};
 
   const aabb minmax = find_minmax(in, out);
-
-  float qkm{};
-  float lat{};
-  float lng{};
-  while (fscanf(in, "%f,%f,%f\n", &qkm, &lat, &lng) == 3) {
-    point a = normie({lat, lng}, minmax);
-    point b = normie({lat + qkm, lng + qkm}, minmax);
+  read_file(in, [&](aabb area) {
+    point a = normie(area.a, minmax);
+    point b = normie(area.b, minmax);
 
     fprintf(out,
             "<rect x='%f' y='%f' width='%f' height='%f' "
@@ -77,7 +78,7 @@ void run_poc(FILE *in, FILE *out) {
 
     // We could use the PLZ, but meh... forgot about it in the cleanup...
     // t.insert(i, area);
-  }
+  });
 }
 
 int main(int argc, char **argv) {
