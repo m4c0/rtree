@@ -15,7 +15,6 @@ struct aabb {
 struct leaf_data {
   unsigned id;
   aabb area;
-  bool valid;
 };
 
 constexpr float area_of(const aabb &a) {
@@ -69,6 +68,7 @@ public:
   }
 
   using varray::operator[];
+  using varray::pop_back;
   using varray::size;
 };
 
@@ -81,17 +81,10 @@ constexpr auto merge(const aabb &a, const leaf_data &n) noexcept {
   return merge(a, n.area);
 }
 
-constexpr bool is_valid(const hai::uptr<node> &n) noexcept { return n; }
-constexpr bool is_valid(const leaf_data &n) noexcept { return n.valid; }
-
-constexpr hai::uptr<node> move(non_leaf *n, unsigned i) noexcept {
-  return traits::move((*n)[i]);
-}
-constexpr leaf_data move(leaf *n, unsigned i) noexcept {
-  auto &t = (*n)[i];
-  auto r = t;
-  t.valid = false;
-  return r;
+constexpr auto take(auto *n, unsigned i) noexcept {
+  auto res = traits::move((*n)[i]);
+  (*n)[i] = traits::move(n->pop_back());
+  return res;
 }
 
 class tree {
@@ -125,8 +118,8 @@ class tree {
   template <typename Tp> void quad_split(Tp *n, Tp *l, Tp *ll) {
     // QS1
     auto [s1, s2] = pick_seeds(n);
-    (*l)[0] = move(n, s1);
-    (*ll)[0] = move(n, s2);
+    (*l)[0] = take(n, s1);
+    (*ll)[0] = take(n, s2);
     // QS2
     // QS3
     auto next = pick_next(n, l, ll);
@@ -159,9 +152,6 @@ class tree {
 
     for (auto e = 0U; e < n->size(); e++) {
       auto &ei = (*n)[e];
-      if (!is_valid(ei))
-        continue;
-
       auto d1 = area_of(merge(l->area(), ei)) - area_of(l->area());
       auto d2 = area_of(merge(ll->area(), ei)) - area_of(ll->area());
       auto d = d1 > d2 ? d1 - d2 : d2 - d1;
