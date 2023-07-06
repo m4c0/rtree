@@ -22,8 +22,9 @@ void read_file(FILE *in, auto &&fn) {
   float lat{};
   float lng{};
   while (fscanf(in, "%f,%f,%f\n", &qkm, &lat, &lng) == 3) {
+    constexpr const auto qscale = 100.f;
     point a{lat, lng};
-    point b{lat + qkm, lng + qkm};
+    point b{lat + qscale * qkm, lng + qscale * qkm};
 
     fn(aabb{a, b});
   }
