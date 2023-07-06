@@ -3,6 +3,7 @@
 #include "../silog/build.hpp"
 #include "../sitime/build.hpp"
 #include "../traits/build.hpp"
+#include "build.hpp"
 
 class pocify : public ecow::unit {
   void build_self() const override {
@@ -31,6 +32,7 @@ int main(int argc, char **argv) {
   poc->add_unit("poc");
 
   auto all = unit::create<seq>("all");
+  all->add_ref(rtree());
   all->add_ref(poc);
   all->add_unit<pocify>(poc->executable().string());
   return run_main(all, argc, argv);
