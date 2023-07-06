@@ -65,12 +65,8 @@ class leaf : public node, public hai::varray<leaf_data> {
 public:
   [[nodiscard]] bool is_leaf() const noexcept { return true; }
 
-  [[nodiscard]] bool add(unsigned id, aabb area) noexcept {
-    if (this->size() == this->capacity()) {
-      return false;
-    }
-    this->push_back(leaf_data{id, area});
-    return true;
+  [[nodiscard]] bool is_full() const noexcept {
+    return this->size() == this->capacity();
   }
 };
 
@@ -216,7 +212,9 @@ class tree {
 public:
   void insert(unsigned id, aabb area) {
     auto l = choose_leaf(area);
-    if (l->add(id, area)) {
+    l->push_back(leaf_data{id, area});
+
+    if (!l->is_full()) {
       // Adjust Tree without "ll"
       node *n = l;
       while (&*m_root != n) {
@@ -225,6 +223,7 @@ public:
       }
       return;
     }
+
     hai::uptr<node> new_l{new leaf{}};
     hai::uptr<node> ll{new leaf{}};
     quad_split(&*l, static_cast<leaf *>(&*new_l), static_cast<leaf *>(&*ll));
