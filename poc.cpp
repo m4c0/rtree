@@ -207,7 +207,7 @@ class tree {
     return res;
   }
 
-  void adjust_tree(hai::uptr<node> &n, hai::uptr<node> &nn) {}
+  bool adjust_tree(node *n, hai::uptr<node> &nn) { return false; }
 
 public:
   void insert(unsigned id, aabb area) {
@@ -215,19 +215,22 @@ public:
     l->push_back(leaf_data{id, area});
 
     if (!l->is_full()) {
-      // Adjust Tree without "ll"
-      node *n = l;
-      while (&*m_root != n) {
-        n->merge_area(area);
-        n = n->parent();
-      }
+      hai::uptr<node> ll{};
+      adjust_tree(l, ll);
       return;
     }
 
-    hai::uptr<node> new_l{new leaf{}};
+    leaf new_l{};
     hai::uptr<node> ll{new leaf{}};
-    quad_split(&*l, static_cast<leaf *>(&*new_l), static_cast<leaf *>(&*ll));
-    adjust_tree(new_l, ll);
+    quad_split(&*l, &new_l, static_cast<leaf *>(&*ll));
+    *l = traits::move(new_l);
+    if (adjust_tree(l, ll)) {
+      auto old = traits::move(m_root);
+      auto *new_nl = new non_leaf();
+      new_nl->push_back(traits::move(old));
+      new_nl->push_back(traits::move(ll));
+      m_root = hai::uptr<node>(new_nl);
+    }
   }
 };
 
