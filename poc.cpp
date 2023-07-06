@@ -102,9 +102,9 @@ class tree {
   }
 
   node *cl3_choose_subtree(non_leaf *n, const aabb &area) {
-    node *f;
-    float min_enl;
-    float rect_area;
+    node *f{};
+    float min_enl{};
+    float rect_area{};
     for (auto &fn : *n) {
       auto enl = enlargement(fn->area(), area);
       auto ra = area_of(fn->area());
@@ -232,7 +232,7 @@ class tree {
       return;
     }
 
-    auto p = n->parent();
+    non_leaf *p = n->parent();
     n->set_area(at3_adjust(n));
 
     if (nn) {
@@ -327,6 +327,7 @@ void run_poc(FILE *in, FILE *out) {
   tree t{};
 
   const aabb minmax = find_minmax(in, out);
+  unsigned i = 100;
   read_file(in, [&](aabb area) {
     point a = normie(area.a, minmax);
     point b = normie(area.b, minmax);
@@ -337,7 +338,7 @@ void run_poc(FILE *in, FILE *out) {
             a.x, a.y, b.x - a.x, b.y - a.y);
 
     // We could use the PLZ, but meh... forgot about it in the cleanup...
-    // t.insert(i, area);
+    t.insert(i++, area);
   });
 }
 
