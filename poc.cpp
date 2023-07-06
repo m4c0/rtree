@@ -1,9 +1,30 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 
+struct point {
+  float x;
+  float y;
+};
+struct aabb {
+  point a;
+  point b;
+};
+
+class tree {
+public:
+  void insert(unsigned id, aabb area) {}
+};
+
 int main(int argc, char **argv) {
   if (argc != 2)
     return 1;
+
+  tree t{};
+
+  for (auto i = 0; i < 10240; i++) {
+    // We could use the PLZ, but meh... forgot about it in the cleanup...
+    // t.insert(i, area);
+  }
 
   FILE *out = fopen(argv[1], "w");
   if (!out)
