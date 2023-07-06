@@ -248,10 +248,10 @@ class tree {
     }
 
     non_leaf *p = n->parent();
-    n->set_area(at3_adjust(n));
+    at3_adjust(n);
 
     if (nn) {
-      nn->set_area(at3_adjust(static_cast<Tp *>(&*nn)));
+      at3_adjust(static_cast<Tp *>(&*nn));
       p->push_back(traits::move(nn));
       if (!p->has_capacity()) {
         hai::uptr<node> pp{new non_leaf{p->parent()}};
@@ -264,12 +264,12 @@ class tree {
     return adjust_tree(p, pp);
   }
 
-  template <typename Tp> aabb at3_adjust(Tp *n) {
+  template <typename Tp> void at3_adjust(Tp *n) {
     aabb res = aabb_of((*n)[0]);
     for (auto i = 1U; i < n->size(); i++) {
       res = merge(res, aabb_of((*n)[i]));
     }
-    return res;
+    n->set_area(res);
   }
 
   void for_each_in(const leaf *n, aabb area, auto &fn) const noexcept {
