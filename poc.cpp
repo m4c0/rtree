@@ -45,6 +45,8 @@ class node {
   aabb m_area{};
 
 public:
+  static constexpr const auto minimum = 4; // "m" in the article
+
   virtual ~node() {}
 
   [[nodiscard]] constexpr aabb area() const noexcept { return m_area; }
@@ -118,11 +120,51 @@ class tree {
   template <typename Tp> void quad_split(Tp *n, Tp *l, Tp *ll) {
     // QS1
     auto [s1, s2] = pick_seeds(n);
-    (*l)[0] = take(n, s1);
-    (*ll)[0] = take(n, s2);
-    // QS2
-    // QS3
-    auto next = pick_next(n, l, ll);
+    (*l)[0] = take(n, s1);  // TODO: "add" after "take"
+    (*ll)[0] = take(n, s2); // TODO: "add" after "take"
+    while (n->size() > 0) {
+      if (l->size() + n->size() == node::minimum) {
+        // l->add(next);
+        continue;
+      }
+      if (ll->size() + n->size() == node::minimum) {
+        // ll->add(next);
+        continue;
+      }
+
+      // QS3
+      auto next = take(n, pick_next(n, l, ll));
+
+      auto a_1 = area_of(l->area());
+      auto a_2 = area_of(ll->area());
+      auto en_1 = area_of(merge(l->area(), next)) - a_1;
+      auto en_2 = area_of(merge(ll->area(), next)) - a_2;
+      if (en_1 > en_2) {
+        // l->add(next);
+        continue;
+      }
+      if (en_2 > en_1) {
+        // ll->add(next);
+        continue;
+      }
+      if (a_1 < a_2) {
+        // l->add(next);
+        continue;
+      }
+      if (a_1 > a_2) {
+        // ll->add(next);
+        continue;
+      }
+      if (l->size() < ll->size()) {
+        // l->add(next);
+        continue;
+      }
+      if (l->size() > ll->size()) {
+        // ll->add(next);
+        continue;
+      }
+      // l->add(next);
+    }
   }
   template <typename Tp> auto pick_seeds(const Tp *n) {
     struct pair {
