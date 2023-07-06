@@ -259,6 +259,21 @@ class tree {
     return res;
   }
 
+  void for_each_in(const leaf *n, aabb area, auto &fn) const noexcept {
+    for (auto &e : *n) {
+      fn(e.id, e.area);
+    }
+  }
+  void for_each_in(const non_leaf *n, aabb area, auto &fn) const noexcept {
+    for (auto &e : *n) {
+      if (e->is_leaf()) {
+        for_each_in(static_cast<const leaf *>(&*e), area, fn);
+      } else {
+        for_each_in(static_cast<const non_leaf *>(&*e), area, fn);
+      }
+    }
+  }
+
 public:
   void insert(unsigned id, aabb area) {
     auto l = choose_leaf(area);
@@ -275,7 +290,13 @@ public:
     adjust_tree(l, ll);
   }
 
-  void for_each_in(aabb area, auto &&fn) const noexcept {}
+  void for_each_in(aabb area, auto &&fn) const noexcept {
+    if (m_root->is_leaf()) {
+      for_each_in(static_cast<const leaf *>(&*m_root), area, fn);
+    } else {
+      for_each_in(static_cast<const non_leaf *>(&*m_root), area, fn);
+    }
+  }
 
   [[nodiscard]] constexpr const auto &root() const noexcept { return m_root; }
 };
@@ -383,6 +404,8 @@ tree build_tree(FILE *in) {
 }
 
 void test_tree(FILE *in, const tree &t) {
+  sitime::stopwatch w{};
+
   unsigned i = 100;
   read_file(in, [&](aabb area) {
     bool found = false;
@@ -397,6 +420,8 @@ void test_tree(FILE *in, const tree &t) {
 
     i++;
   });
+
+  silog::log(silog::info, "All elements found in %dms", w.millis());
 }
 
 void run_poc(FILE *in, FILE *out) {
