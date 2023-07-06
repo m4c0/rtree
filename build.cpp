@@ -1,8 +1,6 @@
 #include "../ecow/ecow.hpp"
-#include "../hai/build.hpp"
 #include "../silog/build.hpp"
 #include "../sitime/build.hpp"
-#include "../traits/build.hpp"
 #include "build.hpp"
 
 class pocify : public ecow::unit {
@@ -30,9 +28,9 @@ int main(int argc, char **argv) {
   poc->add_wsdep("sitime", sitime());
   poc->add_wsdep("traits", traits());
   poc->add_unit("poc");
+  poc->add_ref(rtree());
 
   auto all = unit::create<seq>("all");
-  all->add_ref(rtree());
   all->add_ref(poc);
   all->add_unit<pocify>(poc->executable().string());
   return run_main(all, argc, argv);
