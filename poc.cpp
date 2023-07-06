@@ -2,6 +2,8 @@
 #include <stdio.h>
 
 import hai;
+import silog;
+import sitime;
 import traits;
 
 struct point {
@@ -301,7 +303,7 @@ float max(float a, float b, float c) {
     return a;
   return b > c ? b : c;
 }
-aabb find_minmax(FILE *in, FILE *out) {
+aabb find_minmax(FILE *in) {
   aabb minmax{
       .a = {9e15, 9e15},
       .b = {-9e15, -9e15},
@@ -313,8 +315,6 @@ aabb find_minmax(FILE *in, FILE *out) {
     minmax.b.x = max(minmax.b.x, area.a.x, area.b.x);
     minmax.b.y = max(minmax.b.y, area.a.y, area.b.y);
   });
-  fprintf(out, "<!-- %f %f %f %f -->\n", minmax.a.x, minmax.a.y, minmax.b.x,
-          minmax.b.y);
 
   return minmax;
 }
@@ -350,26 +350,39 @@ void dump_tree(FILE *out, const non_leaf *n) {
     }
   }
 }
-
-void run_poc(FILE *in, FILE *out) {
-  tree t{};
-
-  const aabb minmax = find_minmax(in, out);
-  unsigned i = 100;
-  read_file(in, [&](aabb area) {
-    area.a = normie(area.a, minmax);
-    area.b = normie(area.b, minmax);
-    rect(out, area, "black");
-
-    // We could use the PLZ, but meh... forgot about it in the cleanup...
-    t.insert(i++, area);
-  });
+void dump_tree(FILE *out, const tree &t) {
+  sitime::stopwatch w{};
 
   if (t.root()->is_leaf()) {
     dump_tree(out, static_cast<const leaf *>(&*(t.root())));
   } else {
     dump_tree(out, static_cast<const non_leaf *>(&*(t.root())));
   }
+
+  silog::log(silog::info, "Tree dump in %dms", w.millis());
+}
+
+tree build_tree(FILE *in) {
+  sitime::stopwatch w{};
+  tree t{};
+
+  const aabb minmax = find_minmax(in);
+  unsigned i = 100;
+  read_file(in, [&](aabb area) {
+    area.a = normie(area.a, minmax);
+    area.b = normie(area.b, minmax);
+
+    // We could use the PLZ, but meh... forgot about it in the cleanup...
+    t.insert(i++, area);
+  });
+
+  silog::log(silog::info, "Tree build in %dms", w.millis());
+  return t;
+}
+
+void run_poc(FILE *in, FILE *out) {
+  tree t = build_tree(in);
+  dump_tree(out, t);
 }
 
 int main(int argc, char **argv) {

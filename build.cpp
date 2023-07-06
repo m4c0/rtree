@@ -1,5 +1,7 @@
 #include "../ecow/ecow.hpp"
 #include "../hai/build.hpp"
+#include "../silog/build.hpp"
+#include "../sitime/build.hpp"
 #include "../traits/build.hpp"
 
 class pocify : public ecow::unit {
@@ -23,6 +25,8 @@ int main(int argc, char **argv) {
 
   auto poc = unit::create<tool>("poc");
   poc->add_wsdep("hai", hai());
+  poc->add_wsdep("silog", silog());
+  poc->add_wsdep("sitime", sitime());
   poc->add_wsdep("traits", traits());
   poc->add_unit("poc");
 
