@@ -275,6 +275,8 @@ public:
     adjust_tree(l, ll);
   }
 
+  void for_each_in(aabb area, auto &&fn) const noexcept {}
+
   [[nodiscard]] constexpr const auto &root() const noexcept { return m_root; }
 };
 
@@ -380,9 +382,27 @@ tree build_tree(FILE *in) {
   return t;
 }
 
+void test_tree(FILE *in, const tree &t) {
+  unsigned i = 100;
+  read_file(in, [&](aabb area) {
+    bool found = false;
+    t.for_each_in(area, [&](auto ti, auto ta) {
+      if (i == ti)
+        found = true;
+    });
+    if (!found) {
+      silog::log(silog::error, "Missing element %d", i);
+      throw 0;
+    }
+
+    i++;
+  });
+}
+
 void run_poc(FILE *in, FILE *out) {
   tree t = build_tree(in);
   dump_tree(out, t);
+  test_tree(in, t);
 }
 
 int main(int argc, char **argv) {
