@@ -424,6 +424,7 @@ void test_tree(FILE *in, const tree &t) {
 
   const aabb minmax = find_minmax(in);
   unsigned i = 100;
+  bool failed = false;
   read_file(in, [&](aabb area) {
     area.a = normie(area.a, minmax);
     area.b = normie(area.b, minmax);
@@ -434,13 +435,15 @@ void test_tree(FILE *in, const tree &t) {
         found = true;
     });
     if (!found) {
+      failed = true;
       silog::log(silog::error, "Missing element %d @(%fx%f - %fx%f)", i,
                  area.a.x, area.a.y, area.b.x, area.b.y);
-      throw 0;
     }
 
     i++;
   });
+  if (failed)
+    throw 0;
 
   silog::log(silog::info, "All elements found in %dms", w.millis());
 }
