@@ -41,9 +41,10 @@ constexpr float enlargement(const aabb &orig, const aabb &ext) {
   return new_area - old_area;
 }
 
+class non_leaf;
 class node {
   aabb m_area{};
-  node *m_parent;
+  non_leaf *m_parent;
 
 public:
   static constexpr const auto minimum = 4; // "m" in the article
@@ -51,7 +52,9 @@ public:
   virtual ~node() {}
 
   [[nodiscard]] constexpr aabb area() const noexcept { return m_area; }
-  [[nodiscard]] constexpr node *parent() const noexcept { return m_parent; }
+  [[nodiscard]] constexpr non_leaf *parent() const noexcept { return m_parent; }
+
+  constexpr void set_area(aabb a) noexcept { m_area = a; }
 
   [[nodiscard]] virtual bool is_leaf() const noexcept = 0;
 
@@ -64,10 +67,6 @@ public:
 class leaf : public node, public hai::varray<leaf_data> {
 public:
   [[nodiscard]] bool is_leaf() const noexcept { return true; }
-
-  [[nodiscard]] bool is_full() const noexcept {
-    return this->size() == this->capacity();
-  }
 };
 
 constexpr float area_of(const hai::uptr<node> &n) noexcept {
@@ -75,9 +74,8 @@ constexpr float area_of(const hai::uptr<node> &n) noexcept {
 }
 constexpr float area_of(const leaf_data &n) noexcept { return area_of(n.area); }
 
-constexpr auto merge(const aabb &a, const leaf_data &n) noexcept {
-  return merge(a, n.area);
-}
+constexpr auto aabb_of(const leaf_data &n) noexcept { return n.area; }
+constexpr auto aabb_of(const hai::uptr<node> &n) noexcept { return n->area(); }
 
 constexpr auto take(auto *n, unsigned i) noexcept {
   auto res = traits::move((*n)[i]);
@@ -138,8 +136,8 @@ class tree {
 
       auto a_1 = area_of(l->area());
       auto a_2 = area_of(ll->area());
-      auto en_1 = area_of(merge(l->area(), next)) - a_1;
-      auto en_2 = area_of(merge(ll->area(), next)) - a_2;
+      auto en_1 = area_of(merge(l->area(), aabb_of(next))) - a_1;
+      auto en_2 = area_of(merge(ll->area(), aabb_of(next))) - a_2;
       if (en_1 > en_2) {
         l->push_back(next);
         continue;
@@ -195,8 +193,8 @@ class tree {
 
     for (auto e = 0U; e < n->size(); e++) {
       auto &ei = (*n)[e];
-      auto d1 = area_of(merge(l->area(), ei)) - area_of(l->area());
-      auto d2 = area_of(merge(ll->area(), ei)) - area_of(ll->area());
+      auto d1 = area_of(merge(l->area(), aabb_of(ei))) - area_of(l->area());
+      auto d2 = area_of(merge(ll->area(), aabb_of(ei))) - area_of(ll->area());
       auto d = d1 > d2 ? d1 - d2 : d2 - d1;
       if (d > max_d) {
         max_d = d;
@@ -207,14 +205,39 @@ class tree {
     return res;
   }
 
-  bool adjust_tree(node *n, hai::uptr<node> &nn) { return false; }
+  template <typename Tp> bool adjust_tree(Tp *n, hai::uptr<node> &nn) {
+    if (n == &*m_root)
+      return false;
+
+    auto p = n->parent();
+    n->set_area(at3_adjust(n));
+
+    if (nn) {
+      nn->set_area(at3_adjust(static_cast<Tp *>(&*nn)));
+      p->push_back(traits::move(nn));
+      if (!p->has_capacity()) {
+        // chora!
+      }
+    }
+
+    hai::uptr<node> pp{};
+    return adjust_tree(p, pp);
+  }
+
+  template <typename Tp> aabb at3_adjust(Tp *n) {
+    aabb res = aabb_of((*n)[0]);
+    for (auto i = 1U; i < n->size(); i++) {
+      res = merge(res, aabb_of((*n)[i]));
+    }
+    return res;
+  }
 
 public:
   void insert(unsigned id, aabb area) {
     auto l = choose_leaf(area);
     l->push_back(leaf_data{id, area});
 
-    if (!l->is_full()) {
+    if (l->has_capacity()) {
       hai::uptr<node> ll{};
       adjust_tree(l, ll);
       return;
