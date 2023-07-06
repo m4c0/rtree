@@ -15,6 +15,7 @@ struct aabb {
 struct leaf_data {
   unsigned id;
   aabb area;
+  bool valid;
 };
 
 constexpr float area_of(const aabb &a) {
@@ -71,6 +72,28 @@ public:
   using varray::size;
 };
 
+constexpr float area_of(const hai::uptr<node> &n) noexcept {
+  return area_of(n->area());
+}
+constexpr float area_of(const leaf_data &n) noexcept { return area_of(n.area); }
+
+constexpr auto merge(const aabb &a, const leaf_data &n) noexcept {
+  return merge(a, n.area);
+}
+
+constexpr bool is_valid(const hai::uptr<node> &n) noexcept { return n; }
+constexpr bool is_valid(const leaf_data &n) noexcept { return n.valid; }
+
+constexpr hai::uptr<node> move(non_leaf *n, unsigned i) noexcept {
+  return traits::move((*n)[i]);
+}
+constexpr leaf_data move(leaf *n, unsigned i) noexcept {
+  auto &t = (*n)[i];
+  auto r = t;
+  t.valid = false;
+  return r;
+}
+
 class tree {
   hai::uptr<node> m_root{new leaf{}};
 
@@ -100,14 +123,19 @@ class tree {
   }
 
   template <typename Tp> void quad_split(Tp *n, Tp *l, Tp *ll) {
-    unsigned s1;
-    unsigned s2;
-    pick_seeds(n, s1, s2);
-    (*l)[0] = traits::move((*n)[s1]);
-    (*ll)[0] = traits::move((*n)[s2]);
+    // QS1
+    auto [s1, s2] = pick_seeds(n);
+    (*l)[0] = move(n, s1);
+    (*ll)[0] = move(n, s2);
+    // QS2
+    // QS3
+    auto next = pick_next(n, l, ll);
   }
-  template <typename Tp>
-  void pick_seeds(const Tp *n, unsigned &s1, unsigned &s2) {
+  template <typename Tp> auto pick_seeds(const Tp *n) {
+    struct pair {
+      unsigned s1;
+      unsigned s2;
+    } res;
     auto worst_d = 0.f;
     for (auto e1 = 0U; e1 < n->size(); e1++) {
       for (auto e2 = e1 + 1; e2 < n->size(); e2++) {
@@ -117,11 +145,33 @@ class tree {
         auto d = area_of(j) - area_of(e1i) - area_of(e2i);
         if (d > worst_d) {
           worst_d = d;
-          s1 = e1;
-          s2 = e2;
+          res.s1 = e1;
+          res.s2 = e2;
         }
       }
     }
+    return res;
+  }
+  template <typename Tp>
+  unsigned pick_next(const Tp *n, const Tp *l, const Tp *ll) {
+    auto max_d = 0U;
+    auto res = 0U;
+
+    for (auto e = 0U; e < n->size(); e++) {
+      auto &ei = (*n)[e];
+      if (!is_valid(ei))
+        continue;
+
+      auto d1 = area_of(merge(l->area(), ei)) - area_of(l->area());
+      auto d2 = area_of(merge(ll->area(), ei)) - area_of(ll->area());
+      auto d = d1 > d2 ? d1 - d2 : d2 - d1;
+      if (d > max_d) {
+        max_d = d;
+        res = e;
+      }
+    }
+
+    return res;
   }
 
 public:
