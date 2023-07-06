@@ -1,6 +1,8 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 
+import hai;
+
 struct point {
   float x;
   float y;
@@ -10,9 +12,82 @@ struct aabb {
   point b;
 };
 
-class tree {
+constexpr float area_of(const aabb &a) {
+  float w = a.b.x - a.a.x;
+  float h = a.b.y - a.a.y;
+  return w * h;
+}
+constexpr float min(float a, float b) { return a < b ? a : b; }
+constexpr float max(float a, float b) { return a > b ? a : b; }
+constexpr aabb merge(const aabb &p, const aabb &q) {
+  point a{
+      .x = min(p.a.x, q.a.x),
+      .y = min(p.a.y, q.a.y),
+  };
+  point b{
+      .x = max(p.b.x, q.b.x),
+      .y = max(p.b.y, q.b.y),
+  };
+  return {.a = a, .b = b};
+}
+constexpr float enlargement(const aabb &orig, const aabb &ext) {
+  auto new_area = area_of(merge(orig, ext));
+  auto old_area = area_of(orig);
+  return new_area - old_area;
+}
+
+class node {
+  aabb m_area{};
+
 public:
-  void insert(unsigned id, aabb area) {}
+  virtual ~node() {}
+
+  [[nodiscard]] constexpr aabb area() const noexcept { return m_area; }
+
+  [[nodiscard]] virtual bool is_leaf() const noexcept = 0;
+};
+class non_leaf : public node, public hai::varray<hai::uptr<node>> {
+public:
+  [[nodiscard]] bool is_leaf() const noexcept { return false; }
+};
+class leaf : public node {
+public:
+  [[nodiscard]] bool is_leaf() const noexcept { return true; }
+};
+
+class tree {
+  hai::uptr<node> m_root{new leaf{}};
+
+  node *choose_leaf(const aabb &area) {
+    auto *n = &*m_root;
+    while (!n->is_leaf())
+      n = cl3_choose_subtree(static_cast<non_leaf *>(n), area);
+    return n;
+  }
+
+  node *cl3_choose_subtree(non_leaf *n, const aabb &area) {
+    node *f;
+    float min_enl;
+    float rect_area;
+    for (auto &fn : *n) {
+      auto enl = enlargement(fn->area(), area);
+      auto ra = area_of(fn->area());
+      if ((f == nullptr) || (enl < min_enl) ||
+          (enl == min_enl && ra < rect_area)) {
+        f = &*fn;
+        min_enl = enl;
+        rect_area = ra;
+        continue;
+      }
+    }
+    return f;
+  }
+
+public:
+  void insert(unsigned id, aabb area) {
+    auto l = choose_leaf(area);
+    // I2
+  }
 };
 
 void read_file(FILE *in, auto &&fn) {

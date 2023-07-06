@@ -1,4 +1,5 @@
 #include "../ecow/ecow.hpp"
+#include "../hai/build.hpp"
 
 class pocify : public ecow::unit {
   void build_self() const override {
@@ -21,6 +22,7 @@ int main(int argc, char **argv) {
   using namespace ecow;
 
   auto poc = unit::create<tool>("poc");
+  poc->add_wsdep("hai", hai());
   poc->add_unit("poc");
 
   auto all = unit::create<seq>("all");
