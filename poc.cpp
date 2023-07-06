@@ -15,20 +15,48 @@ public:
   void insert(unsigned id, aabb area) {}
 };
 
+float min(float a, float b, float c) {
+  if (a < b && a < c)
+    return a;
+  return b < c ? b : c;
+}
+float max(float a, float b, float c) {
+  if (a > b && a > c)
+    return a;
+  return b > c ? b : c;
+}
+
 void run_poc(FILE *in, FILE *out) {
   tree t{};
 
-  unsigned qkm{};
-  unsigned lat{};
-  unsigned lng{};
-  while (fscanf(in, "%d,%d,%d\n", &qkm, &lat, &lng) == 3) {
-    fprintf(out, "<!-- %d %d %d -->\n", qkm, lat, lng);
+  constexpr const aabb minmax{
+      .a = {9e9, 9e9},
+      .b = {-9e9, -9e9},
+  };
+
+  float qkm{};
+  float lat{};
+  float lng{};
+  while (fscanf(in, "%f,%f,%f\n", &qkm, &lat, &lng) == 3) {
+    point a{lat, lng};
+    point b{lat + qkm, lng + qkm};
+
+    fprintf(out,
+            "<rect x='%f' y='%f' width='%f' height='%f' "
+            "style='fill:none;stroke:yellow'/>\n",
+            a.x, a.y, b.x - a.x, b.y - a.y);
+
+    minmax.a.x = min(minmax.a.x, a.x, b.x);
+    minmax.a.y = min(minmax.a.y, a.y, b.y);
+    minmax.b.x = max(minmax.a.x, a.x, b.x);
+    minmax.b.y = max(minmax.a.y, a.y, b.y);
 
     // We could use the PLZ, but meh... forgot about it in the cleanup...
     // t.insert(i, area);
   }
-  // fprintf(out, "<rect x=50 y=50 width=100 height=200 "
-  //              "style='stroke:black;fill:transparent'>\n");
+
+  fprintf(out, "<!-- %f %f %f %f -->\n", minmax.a.x, minmax.a.y, minmax.b.x,
+          minmax.b.y);
 }
 
 int main(int argc, char **argv) {
