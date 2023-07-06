@@ -19,6 +19,19 @@ struct leaf_data {
   aabb area;
 };
 
+[[nodiscard]] constexpr auto intersect(aabb n, aabb o) noexcept {
+  if (n.b.x < o.a.x)
+    return false;
+  if (o.b.x < n.a.x)
+    return false;
+  if (n.b.y < o.a.y)
+    return false;
+  if (o.b.y < n.a.y)
+    return false;
+  return true;
+}
+static_assert(intersect(aabb{1, 1, 2, 2}, aabb{1, 1, 2, 2}));
+
 constexpr float area_of(const aabb &a) {
   float w = a.b.x - a.a.x;
   float h = a.b.y - a.a.y;
@@ -261,7 +274,8 @@ class tree {
 
   void for_each_in(const leaf *n, aabb area, auto &fn) const noexcept {
     for (auto &e : *n) {
-      fn(e.id, e.area);
+      if (intersect(e.area, area))
+        fn(e.id, e.area);
     }
   }
   void for_each_in(const non_leaf *n, aabb area, auto &fn) const noexcept {
