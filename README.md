@@ -1,2 +1,2 @@
-# ecow-template
-Template repo for ECOW projects
+# rtree
+Basic R*-tree implementation in C++
