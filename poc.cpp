@@ -43,9 +43,7 @@ constexpr float enlargement(const aabb &orig, const aabb &ext) {
 
 class node {
   aabb m_area{};
-
-protected:
-  void merge_area(aabb area) noexcept { m_area = merge(m_area, area); }
+  node *m_parent;
 
 public:
   static constexpr const auto minimum = 4; // "m" in the article
@@ -53,17 +51,15 @@ public:
   virtual ~node() {}
 
   [[nodiscard]] constexpr aabb area() const noexcept { return m_area; }
+  [[nodiscard]] constexpr node *parent() const noexcept { return m_parent; }
 
   [[nodiscard]] virtual bool is_leaf() const noexcept = 0;
+
+  void merge_area(aabb area) noexcept { m_area = merge(m_area, area); }
 };
 class non_leaf : public node, public hai::varray<hai::uptr<node>> {
 public:
   [[nodiscard]] bool is_leaf() const noexcept { return false; }
-
-  void push_back(hai::uptr<node> d) noexcept {
-    varray::push_back(d);
-    merge_area(d->area());
-  }
 };
 class leaf : public node, public hai::varray<leaf_data> {
 public:
@@ -75,10 +71,6 @@ public:
     }
     this->push_back(leaf_data{id, area});
     return true;
-  }
-  void push_back(leaf_data d) noexcept {
-    varray::push_back(d);
-    merge_area(d.area);
   }
 };
 
@@ -219,14 +211,24 @@ class tree {
     return res;
   }
 
+  void adjust_tree(hai::uptr<node> &n, hai::uptr<node> &nn) {}
+
 public:
   void insert(unsigned id, aabb area) {
     auto l = choose_leaf(area);
-    if (!l->add(id, area)) {
-      hai::uptr<node> new_l{new leaf{}};
-      hai::uptr<node> ll{new leaf{}};
-      quad_split(&*l, static_cast<leaf *>(&*new_l), static_cast<leaf *>(&*ll));
+    if (l->add(id, area)) {
+      // Adjust Tree without "ll"
+      node *n = l;
+      while (&*m_root != n) {
+        n->merge_area(area);
+        n = n->parent();
+      }
+      return;
     }
+    hai::uptr<node> new_l{new leaf{}};
+    hai::uptr<node> ll{new leaf{}};
+    quad_split(&*l, static_cast<leaf *>(&*new_l), static_cast<leaf *>(&*ll));
+    adjust_tree(new_l, ll);
   }
 };
 
