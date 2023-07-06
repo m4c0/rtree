@@ -9,6 +9,10 @@ int main(int argc, char **argv) {
   if (!out)
     return 2;
 
-  fprintf(out, "<!DOCTYPE html>");
+  fprintf(out, "<!DOCTYPE html>\n");
+  fprintf(out, "<html><body><svg width=800 height=800>\n");
+  fprintf(out, "<rect x=50 y=50 width=100 height=200 "
+               "style='stroke:black;fill:transparent'>\n");
+  fprintf(out, "</svg></body></html>\n");
   fclose(out);
 }
