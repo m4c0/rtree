@@ -76,6 +76,11 @@ db::nnid split_node(db::nnid n) {
   // QS1
   auto &node = db::current()->read(n);
   auto [ei1, ei2] = pick_seeds(node);
+  if (ei1 < ei2) {
+    auto tmp = ei1;
+    ei1 = ei2;
+    ei2 = tmp;
+  }
   auto g1 = db::current()->create_node(node.parent, node.leaf);
   auto g1area = move_to_group(g1, n, ei1);
   auto g2 = db::current()->create_node(node.parent, node.leaf);
