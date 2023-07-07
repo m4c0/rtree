@@ -50,12 +50,13 @@ public:
     auto idx = find_n_in_parent(id, l);
     db::current()->remove_eni(l, idx);
 
-    condense_tree(l);
+    m_root = condense_tree(l);
 
     auto root = db::current()->read(m_root);
-    if (root.size == 1) {
+    if (!root.leaf && root.size == 1) {
       auto new_root = root.children[0].id;
       db::current()->delete_node(m_root);
+      db::current()->set_parent(new_root, db::nnid{});
       m_root = new_root;
     }
 

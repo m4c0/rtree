@@ -6,7 +6,7 @@ import :insert;
 import hai;
 
 namespace rtree {
-void condense_tree(db::nnid l) {
+db::nnid condense_tree(db::nnid l) {
   struct qd {
     db::nnid id{};
     unsigned depth{};
@@ -45,5 +45,7 @@ void condense_tree(db::nnid l) {
       root = insert(root, eid, earea, depth - d);
     }
   }
+
+  return root;
 }
 } // namespace rtree
