@@ -93,7 +93,7 @@ split split_node(db::nnid n) {
     // QS2
     if (node.size == 0) {
       db::current()->delete_node(n);
-      break;
+      return split{g1, g2};
     }
     if (g1node.size + node.size <= db::node_lower_limit) {
       move_to_group(g1, n, 0);
@@ -116,7 +116,5 @@ split split_node(db::nnid n) {
       g2area = merge(g2area, iarea);
     }
   }
-
-  return split{g1, g2};
 }
 } // namespace rtree

@@ -28,7 +28,7 @@ public:
       ll = g2;
     }
 
-    adjust_tree(m_root, l, ll);
+    adjust_tree(l, ll);
     if (db::current()->read(m_root).size == 0) {
       m_root = db::current()->create_node(db::nnid{}, false);
 

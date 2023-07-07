@@ -39,7 +39,7 @@ auto at3(db::nnid n) {
   return p;
 }
 
-void adjust_tree(db::nnid root, db::nnid n, db::nnid nn) {
+void adjust_tree(db::nnid n, db::nnid nn) {
   db::nnid p = at3(n);
   if (!p)
     return;
@@ -58,6 +58,6 @@ void adjust_tree(db::nnid root, db::nnid n, db::nnid nn) {
     }
   }
 
-  adjust_tree(root, p, pp);
+  adjust_tree(p, pp);
 }
 } // namespace rtree
