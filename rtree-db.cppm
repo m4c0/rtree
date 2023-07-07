@@ -77,7 +77,7 @@ public:
     n.in_use = true;
     return res;
   }
-  void delete_node(nnid n) { get(n).in_use = false; }
+  void delete_node(nnid n) { get(n) = {}; }
 
   void set_parent(nnid n, nnid p) { get(n).parent = p; }
 
