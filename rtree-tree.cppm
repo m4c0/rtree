@@ -54,6 +54,9 @@ public:
     if (!l)
       return false;
 
+    auto idx = find_n_in_parent(id, l);
+    db::current()->remove_eni(l, idx);
+
     return true;
   }
 
