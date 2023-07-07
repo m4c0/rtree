@@ -54,7 +54,9 @@ public:
 
     auto root = db::current()->read(id);
     if (root.size == 1) {
-      m_root = root.children[0].id;
+      auto new_root = root.children[0].id;
+      db::current()->delete_node(m_root);
+      m_root = new_root;
     }
 
     return true;

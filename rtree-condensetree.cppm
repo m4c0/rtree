@@ -31,6 +31,7 @@ ctres condense_tree(db::nnid n) {
     auto &[ei, earea] = node.children[i];
     root = insert(root, ei, earea, lvl);
   }
+  db::current()->delete_node(n);
 
   return {root, lvl + 1};
 }
