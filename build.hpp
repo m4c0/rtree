@@ -1,5 +1,6 @@
 #include "../ecow/ecow.hpp"
 #include "../hai/build.hpp"
+#include "../silog/build.hpp"
 #include "../traits/build.hpp"
 
 auto rtree() {
@@ -7,6 +8,7 @@ auto rtree() {
 
   auto m = unit::create<mod>("rtree");
   m->add_wsdep("hai", hai());
+  m->add_wsdep("silog", silog());
   m->add_wsdep("traits", traits());
   m->add_part("aabb");
   m->add_part("db");
