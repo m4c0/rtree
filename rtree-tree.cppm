@@ -29,7 +29,7 @@ public:
     }
 
     adjust_tree(l, ll);
-    if (db::current()->read(m_root).size == 0) {
+    if (!db::current()->read(l).parent && ll) {
       m_root = db::current()->create_node(db::nnid{}, false);
 
       auto l_area = calculate_enclosing_rect(db::current()->read(l));
