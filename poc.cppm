@@ -134,7 +134,7 @@ void test_tree(FILE *in, const tree &t) {
 
     bool found = false;
     t.for_each_in(area, [&](auto ti, auto ta) {
-      if (i == ti)
+      if (db::nnid{i * 10000} == ti)
         found = true;
     });
     if (!found) {

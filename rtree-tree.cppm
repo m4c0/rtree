@@ -11,6 +11,20 @@ export namespace rtree {
 class tree {
   db::nnid m_root{};
 
+  void for_each_in(db::nnid n, aabb area, auto &fn) const noexcept {
+    auto node = db::current()->read(n);
+    for (auto i = 0U; i < node.size; i++) {
+      auto &e = node.children[i];
+      if (!intersect(area, e.area))
+        continue;
+      if (node.leaf) {
+        fn(e.id, e.area);
+      } else {
+        for_each_in(e.id, area, fn);
+      }
+    }
+  }
+
 public:
   void insert(db::nnid id, aabb area) {
     if (!m_root) {
@@ -27,7 +41,12 @@ public:
     m_root = adjust_tree(l, ll);
   }
 
-  void for_each_in(aabb area, auto &&fn) const noexcept {}
+  void for_each_in(aabb area, auto &&fn) const noexcept {
+    if (!m_root)
+      return;
+
+    for_each_in(m_root, area, fn);
+  }
 
   [[nodiscard]] constexpr auto root() const noexcept { return m_root; }
 };
