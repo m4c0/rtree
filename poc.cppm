@@ -149,6 +149,23 @@ void test_tree(FILE *in, const tree &t) {
   silog::log(silog::info, "All elements found in %dms", w.millis());
 }
 
+class clean_failed {};
+void clean_tree(FILE *in, tree &t) {
+  sitime::stopwatch w{};
+
+  const aabb minmax = find_minmax(in);
+  unsigned i = 100;
+  read_file(in, [&](aabb area) {
+    area.a = normie(area.a, minmax);
+    area.b = normie(area.b, minmax);
+
+    if (!t.remove(db::nnid{i++ * 10000}, area))
+      throw clean_failed();
+  });
+
+  silog::log(silog::info, "All elements removed in %dms", w.millis());
+}
+
 void run_poc(FILE *in, const char *out) {
   db::storage s{};
   db::current() = &s;
@@ -156,6 +173,7 @@ void run_poc(FILE *in, const char *out) {
   tree t = build_tree(in);
   dump_tree(out, t);
   test_tree(in, t);
+  clean_tree(in, t);
 }
 
 extern "C" int main(int argc, char **argv) {
@@ -168,11 +186,13 @@ extern "C" int main(int argc, char **argv) {
 
   try {
     run_poc(in, argv[1]);
+    return 0;
+  } catch (clean_failed) {
+    silog::log(silog::error, "remove test failed");
   } catch (test_failed) {
     silog::log(silog::error, "for_each_in test failed");
-    return 1;
   } catch (db::inconsistency_error) {
     silog::log(silog::error, "db inconsistency error");
-    return 1;
   }
+  return 1;
 }

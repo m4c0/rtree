@@ -48,6 +48,8 @@ public:
     for_each_in(m_root, area, fn);
   }
 
+  [[nodiscard]] bool remove(db::nnid id, aabb area) { return false; }
+
   [[nodiscard]] constexpr auto root() const noexcept { return m_root; }
 };
 } // namespace rtree
