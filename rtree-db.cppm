@@ -12,7 +12,7 @@ public:
   constexpr explicit nnid() = default;
   constexpr explicit nnid(unsigned v) : m_id{v + 1} {}
 
-  constexpr operator bool() const noexcept { return m_id > 0; }
+  explicit constexpr operator bool() const noexcept { return m_id > 0; }
   constexpr unsigned index() const noexcept { return m_id - 1; }
 };
 struct link {
