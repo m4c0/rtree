@@ -121,6 +121,7 @@ tree build_tree(FILE *in) {
   return t;
 }
 
+class test_failed {};
 void test_tree(FILE *in, const tree &t) {
   sitime::stopwatch w{};
 
@@ -145,7 +146,7 @@ void test_tree(FILE *in, const tree &t) {
     i++;
   });
   if (failed)
-    throw 0;
+    throw test_failed{};
 
   silog::log(silog::info, "All elements found in %dms", w.millis());
 }
@@ -169,6 +170,9 @@ extern "C" int main(int argc, char **argv) {
 
   try {
     run_poc(in, argv[1]);
+  } catch (test_failed) {
+    silog::log(silog::error, "for_each_in test failed");
+    return 1;
   } catch (db::inconsistency_error) {
     silog::log(silog::error, "db inconsistency error");
     return 1;
