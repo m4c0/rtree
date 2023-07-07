@@ -52,6 +52,11 @@ public:
 
     condense_tree(l);
 
+    auto root = db::current()->read(id);
+    if (root.size == 1) {
+      m_root = root.children[0].id;
+    }
+
     return true;
   }
 
