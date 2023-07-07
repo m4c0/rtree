@@ -41,9 +41,12 @@ unsigned pick_next(const db::node &n, aabb g1a, aabb g2a) {
 }
 
 inline aabb move_to_group(db::nnid g, db::nnid n, unsigned idx) {
-  auto e = db::current()->read(n).children[idx];
+  auto node = db::current()->read(n);
+  auto e = node.children[idx];
   db::current()->create_enni(g, e.id, e.area);
   db::current()->remove_eni(n, idx);
+  if (!node.leaf)
+    db::current()->set_parent(e.id, g);
   return e.area;
 }
 
