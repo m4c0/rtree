@@ -13,7 +13,7 @@ class tree {
   db::nnid m_root{};
 
   void for_each_in(db::nnid n, aabb area, auto &fn) const noexcept {
-    auto node = db::current()->read(n);
+    auto &node = db::current()->read(n);
     for (auto i = 0U; i < node.size; i++) {
       auto &e = node.children[i];
       if (!intersect(area, e.area))
