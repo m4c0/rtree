@@ -11,7 +11,8 @@ namespace rtree {
   db::nnid f{};
   float min_enl{};
   float rect_area{};
-  for (auto &[id, area] : node.children) {
+  for (auto i = 0U; i < node.size; i++) {
+    auto &[id, area] = node.children[i];
     auto enl = enlargement(area, ei);
     auto ra = area_of(area);
     if (!f || (enl < min_enl) || (enl == min_enl && ra < rect_area)) {

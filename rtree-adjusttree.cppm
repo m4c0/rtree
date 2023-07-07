@@ -18,7 +18,8 @@ aabb calculate_enclosing_rect(const db::node &node) {
       .a = {9e10f, 9e10f},
       .b = {-9e10f, -9e10f},
   };
-  for (auto &[id, area] : node.children) {
+  for (auto i = 0U; i < node.size; i++) {
+    auto area = node.children[i].area;
     eni.a.x = min(area.a.x, eni.a.x);
     eni.a.y = min(area.a.y, eni.a.y);
     eni.b.x = max(area.b.x, eni.b.x);
