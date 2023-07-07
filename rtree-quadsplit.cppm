@@ -7,6 +7,10 @@ struct seeds {
   unsigned ei1;
   unsigned ei2;
 };
+struct split {
+  db::nnid g1;
+  db::nnid g2;
+};
 
 seeds pick_seeds(const db::node &n) {
   seeds res{};
@@ -24,39 +28,95 @@ seeds pick_seeds(const db::node &n) {
   }
   return res;
 }
+unsigned pick_next(const db::node &n, aabb g1a, aabb g2a) {
+  unsigned res{};
+  float max_d = 0;
+  for (auto i = 0U; i < n.size; i++) {
+    auto e = n.children[i];
+    auto d1 = area_of(merge(e.area, g1a));
+    auto d2 = area_of(merge(e.area, g2a));
+    auto d = (d1 - d2) * (d1 - d2); // Poor'man ABS
+    if (d > max_d) {
+      res = i;
+      max_d = d;
+    }
+  }
+  return res;
+}
 
-inline void move_to_group(db::nnid g, db::nnid n, unsigned idx) {
+inline aabb move_to_group(db::nnid g, db::nnid n, unsigned idx) {
   auto e = db::current()->read(n).children[idx];
   db::current()->create_enni(g, e.id, e.area);
   db::current()->remove_eni(n, idx);
+  return e.area;
 }
 
-void split_node(db::nnid n) {
+inline bool should_move_to_g1(aabb g1area, aabb g2area, aabb iarea,
+                              const db::node &g1node, const db::node &g2node) {
+  auto ig1area = merge(g1area, iarea);
+  auto ig2area = merge(g2area, iarea);
+
+  if (area_of(ig1area) < area_of(ig2area)) {
+    return true;
+  } else if (area_of(ig1area) > area_of(ig2area)) {
+    return false;
+  }
+
+  if (area_of(g1area) < area_of(g2area)) {
+    return true;
+  } else if (area_of(g1area) > area_of(g2area)) {
+    return false;
+  }
+
+  if (g1node.size < g2node.size) {
+    return true;
+  } else if (g1node.size < g2node.size) {
+    return false;
+  }
+  return true;
+}
+
+split split_node(db::nnid n) {
   // QS1
   auto &node = db::current()->read(n);
   auto [ei1, ei2] = pick_seeds(node);
   auto g1 = db::current()->create_node(node.parent, node.leaf);
-  move_to_group(g1, n, ei1);
+  auto g1area = move_to_group(g1, n, ei1);
   auto g2 = db::current()->create_node(node.parent, node.leaf);
-  move_to_group(g2, n, ei2);
+  auto g2area = move_to_group(g2, n, ei2);
 
   while (true) {
+    auto &node = db::current()->read(n);
+    auto &g1node = db::current()->read(g1);
+    auto &g2node = db::current()->read(g2);
+
     // QS2
-    auto n_size = db::current()->read(n).size;
-    if (n_size == 0) {
+    if (node.size == 0) {
       db::current()->delete_node(n);
       break;
     }
-    auto g1_size = db::current()->read(g1).size;
-    if (g1_size + n_size <= db::node_lower_limit) {
+    if (g1node.size + node.size <= db::node_lower_limit) {
       move_to_group(g1, n, 0);
       continue;
     }
-    auto g2_size = db::current()->read(g1).size;
-    if (g2_size + n_size <= db::node_lower_limit) {
+    if (g2node.size + node.size <= db::node_lower_limit) {
       move_to_group(g2, n, 0);
       continue;
     }
+
+    // QS3
+    auto idx = pick_next(node, g1area, g2area);
+    auto iarea = node.children[idx].area;
+
+    if (should_move_to_g1(g1area, g2area, iarea, g1node, g2node)) {
+      move_to_group(g1, n, idx);
+      g1area = merge(g1area, iarea);
+    } else {
+      move_to_group(g2, n, idx);
+      g2area = merge(g2area, iarea);
+    }
   }
+
+  return split{g1, g2};
 }
 } // namespace rtree
