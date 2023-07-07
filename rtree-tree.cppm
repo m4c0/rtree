@@ -52,7 +52,7 @@ public:
 
     condense_tree(l);
 
-    auto root = db::current()->read(id);
+    auto root = db::current()->read(m_root);
     if (root.size == 1) {
       auto new_root = root.children[0].id;
       db::current()->delete_node(m_root);
