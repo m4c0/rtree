@@ -2,6 +2,7 @@ export module rtree:adjusttree;
 import :aabb;
 import :db;
 import :quadsplit;
+import silog;
 
 namespace rtree {
 unsigned find_n_in_parent(db::nnid n, db::nnid p) {
@@ -11,6 +12,7 @@ unsigned find_n_in_parent(db::nnid n, db::nnid p) {
       return idx;
   }
   // Unreachable, unless DB is inconsistent
+  silog::log(silog::error, "attempt of reading orphaned node");
   throw db::inconsistency_error{};
 }
 aabb calculate_enclosing_rect(const db::node &node) {

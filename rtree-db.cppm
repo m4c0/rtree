@@ -1,6 +1,7 @@
 export module rtree:db;
 import :aabb;
 import hai;
+import silog;
 
 export namespace rtree::db {
 constexpr const auto node_lower_limit = 4;
@@ -45,12 +46,16 @@ class storage {
 
   [[nodiscard]] node &get(nnid id) {
     unsigned idx = id.index();
-    if (idx >= m_nodes.size())
+    if (idx >= m_nodes.size()) {
+      silog::log(silog::error, "attempt of reading node past end");
       throw inconsistency_error();
+    }
 
     node &res = m_nodes[idx];
-    if (!res.in_use)
+    if (!res.in_use) {
+      silog::log(silog::error, "attempt of reading node not in use");
       throw inconsistency_error();
+    }
     return res;
   }
 
