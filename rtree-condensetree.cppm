@@ -41,7 +41,7 @@ void condense_tree(db::nnid l) {
   for (auto &[n, d] : q) {
     auto &node = db::current()->read(n);
     for (auto i = node.size; i > 0; i--) {
-      auto &[eid, earea] = node.children[i];
+      auto &[eid, earea] = node.children[i - 1];
       root = insert(root, eid, earea, depth - d);
     }
   }
