@@ -76,14 +76,14 @@ public:
   void delete_node(nnid n) { get(n).in_use = false; }
 
   void create_enni(nnid p, nnid nn, aabb area) {
-    auto pnode = get(p);
+    auto &pnode = get(p);
     pnode.children[pnode.size++] = {nn, area};
   }
   void adjust_eni(nnid p, unsigned en, aabb area) {
     get(p).children[en].area = area;
   }
   void remove_eni(nnid p, unsigned en) {
-    auto pnode = get(p);
+    auto &pnode = get(p);
     pnode.children[en] = pnode.children[--pnode.size];
   }
 };
