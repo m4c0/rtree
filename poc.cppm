@@ -70,18 +70,34 @@ void rect(FILE *out, int id, aabb area, const char *colour, unsigned ind) {
 }
 
 void dump_node(FILE *out, db::nnid id, unsigned ind) {
+  silog::log(silog::debug, "dump node %d", id.index());
+
   const auto &node = db::current()->read(id);
   const auto colour = node.leaf ? "blue" : "red";
   for (auto i = 0U; i < node.size; i++) {
     auto &[cid, area] = node.children[i];
 
     rect(out, id.index(), area, colour, ind);
-    dump_node(out, cid, ind + 1);
+    if (!node.leaf)
+      dump_node(out, cid, ind + 1);
   }
 }
-void dump_tree(FILE *out, const tree &t) {
+void dump_tree(const char *fn, const tree &t) {
   sitime::stopwatch w{};
+
+  FILE *out = fopen(fn, "w");
+  if (!out)
+    throw 0;
+
+  fprintf(out, "<?xml version='1.0' standalone='no'?>\n");
+  fprintf(out, "<svg width='800' height='800' version='1.1' "
+               "xmlns='http://www.w3.org/2000/svg'>\n");
+
   dump_node(out, t.root(), 0);
+
+  fprintf(out, "</svg>\n");
+  fclose(out);
+
   silog::log(silog::info, "Tree dump in %dms", w.millis());
 }
 
@@ -92,7 +108,7 @@ tree build_tree(FILE *in) {
   const aabb minmax = find_minmax(in);
   unsigned i = 100;
   read_file(in, [&](aabb area) {
-    silog::log(silog::debug, "Read %d", i);
+    // silog::log(silog::debug, "Read %d", i);
     area.a = normie(area.a, minmax);
     area.b = normie(area.b, minmax);
 
@@ -133,7 +149,7 @@ void test_tree(FILE *in, const tree &t) {
   silog::log(silog::info, "All elements found in %dms", w.millis());
 }
 
-void run_poc(FILE *in, FILE *out) {
+void run_poc(FILE *in, const char *out) {
   db::storage s{};
   db::current() = &s;
 
@@ -150,14 +166,5 @@ extern "C" int main(int argc, char **argv) {
   if (!in)
     return 2;
 
-  FILE *out = fopen(argv[1], "w");
-  if (!out)
-    return 2;
-
-  fprintf(out, "<?xml version='1.0' standalone='no'?>\n");
-  fprintf(out, "<svg width='800' height='800' version='1.1' "
-               "xmlns='http://www.w3.org/2000/svg'>\n");
-  run_poc(in, out);
-  fprintf(out, "</svg>\n");
-  fclose(out);
+  run_poc(in, argv[1]);
 }
