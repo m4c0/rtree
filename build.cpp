@@ -23,16 +23,18 @@ public:
 int main(int argc, char **argv) {
   using namespace ecow;
 
-  auto poc = unit::create<tool>("poc");
+  auto poc = unit::create<mod>("poc");
   poc->add_wsdep("hai", hai());
   poc->add_wsdep("silog", silog());
   poc->add_wsdep("sitime", sitime());
   poc->add_wsdep("traits", traits());
-  poc->add_ref(rtree());
-  poc->add_unit("poc");
+
+  auto p_tool = unit::create<tool>("poc");
+  p_tool->add_ref(rtree());
+  p_tool->add_ref(poc);
 
   auto all = unit::create<seq>("all");
-  all->add_ref(poc);
-  all->add_unit<pocify>(poc->executable().string());
+  all->add_ref(p_tool);
+  all->add_unit<pocify>(p_tool->executable().string());
   return run_main(all, argc, argv);
 }

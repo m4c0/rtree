@@ -1,5 +1,8 @@
+module;
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
+
+export module poc;
 
 import rtree;
 
@@ -89,6 +92,7 @@ tree build_tree(FILE *in) {
   const aabb minmax = find_minmax(in);
   unsigned i = 100;
   read_file(in, [&](aabb area) {
+    silog::log(silog::debug, "Read %d", i);
     area.a = normie(area.a, minmax);
     area.b = normie(area.b, minmax);
 
@@ -138,7 +142,7 @@ void run_poc(FILE *in, FILE *out) {
   test_tree(in, t);
 }
 
-int main(int argc, char **argv) {
+extern "C" int main(int argc, char **argv) {
   if (argc != 2)
     return 1;
 
