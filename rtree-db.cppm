@@ -44,17 +44,19 @@ class storage {
 
   [[nodiscard]] node &get(nnid id) {
     unsigned idx = id.index();
-    if (idx > m_nodes.size())
-      m_nodes.set_capacity(idx + resize_cap);
+    if (idx >= m_nodes.size())
+      throw inconsistency_error();
 
-    return m_nodes[idx];
+    node &res = m_nodes[idx];
+    if (!res.in_use)
+      throw inconsistency_error();
+    return res;
   }
 
-  [[nodiscard]] nnid create_node() {
+  [[nodiscard]] nnid find_unused_node() {
     for (auto i = 0U; i < m_nodes.size(); i++) {
       auto &n = m_nodes[i];
       if (!n.in_use) {
-        n.in_use = true;
         return nnid{i};
       }
     }
@@ -67,10 +69,11 @@ public:
   [[nodiscard]] const node &read(nnid id) { return get(id); }
 
   [[nodiscard]] nnid create_node(nnid p, bool leaf) {
-    auto res = create_node();
-    auto &n = get(res);
+    auto res = find_unused_node();
+    auto &n = m_nodes[res.index()];
     n.parent = p;
     n.leaf = leaf;
+    n.in_use = true;
     return res;
   }
   void delete_node(nnid n) { get(n).in_use = false; }
