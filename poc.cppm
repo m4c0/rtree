@@ -70,8 +70,6 @@ void rect(FILE *out, int id, aabb area, const char *colour, unsigned ind) {
 }
 
 void dump_node(FILE *out, db::nnid id, unsigned ind) {
-  silog::log(silog::debug, "dump node %d", id.index());
-
   const auto &node = db::current()->read(id);
   const auto colour = node.leaf ? "blue" : "red";
   for (auto i = 0U; i < node.size; i++) {
