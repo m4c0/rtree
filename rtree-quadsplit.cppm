@@ -93,7 +93,8 @@ db::nnid split_node(db::nnid n) {
 
     // QS2
     if (node.size == 0) {
-      for (auto i = 0; i < g1node.size; i++) {
+      // Running in reverse to avoid getting updated g1node.size
+      for (auto i = g1node.size; i > 0; i--) {
         move_to_group(n, g1, 0);
       }
       db::current()->delete_node(g1);
