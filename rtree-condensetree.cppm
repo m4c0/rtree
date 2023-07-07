@@ -1,11 +1,12 @@
 export module rtree:condensetree;
 import :aabb;
+import :common;
 import :db;
 
 namespace rtree {
 void condense_tree(db::nnid n) {
   auto &node = db::current()->read(n);
-  auto p = n.parent;
+  auto p = node.parent;
   if (p) {
     auto idx = find_n_in_parent(n, p);
     if (node.size < db::node_lower_limit) {
