@@ -92,6 +92,7 @@ void dump_tree(const char *fn, const tree &t) {
   fprintf(out, "<?xml version='1.0' standalone='no'?>\n");
   fprintf(out, "<svg width='800' height='800' version='1.1' "
                "xmlns='http://www.w3.org/2000/svg'>\n");
+  fprintf(out, "<!-- root = %d -->\n", t.root().index());
 
   dump_node(out, t.root(), 0);
 
