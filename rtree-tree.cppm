@@ -3,6 +3,7 @@ import :aabb;
 import :db;
 import :adjusttree;
 import :chooseleaf;
+import :condensetree;
 import :findleaf;
 import :quadsplit;
 import hai;
@@ -56,6 +57,8 @@ public:
 
     auto idx = find_n_in_parent(id, l);
     db::current()->remove_eni(l, idx);
+
+    condense_tree(l);
 
     return true;
   }
