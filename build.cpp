@@ -28,8 +28,8 @@ int main(int argc, char **argv) {
   poc->add_wsdep("silog", silog());
   poc->add_wsdep("sitime", sitime());
   poc->add_wsdep("traits", traits());
-  poc->add_unit("poc");
   poc->add_ref(rtree());
+  poc->add_unit("poc");
 
   auto all = unit::create<seq>("all");
   all->add_ref(poc);
