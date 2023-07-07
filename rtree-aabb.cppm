@@ -47,5 +47,16 @@ constexpr float enlargement(const aabb &orig, const aabb &ext) {
 }
 } // namespace rtree
 
-static_assert(rtree::intersect(rtree::aabb{1, 1, 2, 2},
-                               rtree::aabb{1, 1, 2, 2}));
+namespace {
+using namespace rtree;
+
+static_assert(intersect(aabb{1, 1, 2, 2}, aabb{1, 1, 2, 2}));
+static_assert(intersect(aabb{0, 0, 3, 3}, aabb{1, 1, 2, 2}));
+
+static_assert(area_of(aabb{1, 2, 4, 6}) == 12);
+
+static_assert(min(1, 2) == 1);
+static_assert(min(2, 1) == 1);
+static_assert(max(1, 2) == 2);
+static_assert(max(2, 1) == 2);
+} // namespace
