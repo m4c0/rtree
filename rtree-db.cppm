@@ -50,8 +50,6 @@ class storage {
     return m_nodes[idx];
   }
 
-public:
-  [[nodiscard]] const node &read(nnid id) { return get(id); }
   [[nodiscard]] nnid create_node() {
     for (auto i = 0U; i < m_nodes.size(); i++) {
       auto &n = m_nodes[i];
@@ -64,6 +62,10 @@ public:
     m_nodes.add_capacity(resize_cap);
     return nnid{i};
   }
+
+public:
+  [[nodiscard]] const node &read(nnid id) { return get(id); }
+
   [[nodiscard]] nnid create_node(nnid p, bool leaf) {
     auto res = create_node();
     auto &n = get(res);
