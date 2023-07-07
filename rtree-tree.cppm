@@ -28,15 +28,7 @@ public:
       ll = g2;
     }
 
-    adjust_tree(l, ll);
-    if (!db::current()->read(l).parent && ll) {
-      m_root = db::current()->create_node(db::nnid{}, false);
-
-      auto l_area = calculate_enclosing_rect(db::current()->read(l));
-      db::current()->create_enni(m_root, l, l_area);
-      auto ll_area = calculate_enclosing_rect(db::current()->read(ll));
-      db::current()->create_enni(m_root, ll, ll_area);
-    }
+    m_root = adjust_tree(l, ll);
   }
 
   void for_each_in(aabb area, auto &&fn) const noexcept {}

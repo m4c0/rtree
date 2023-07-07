@@ -39,16 +39,27 @@ auto at3(db::nnid n) {
   return p;
 }
 
-void adjust_tree(db::nnid n, db::nnid nn) {
+void reparent(db::nnid n, db::nnid p) {
+  auto node = db::current()->read(n);
+  auto area = calculate_enclosing_rect(node);
+  db::current()->create_enni(p, n, area);
+}
+
+db::nnid adjust_tree(db::nnid n, db::nnid nn) {
   db::nnid p = at3(n);
-  if (!p)
-    return;
+  if (!p) {
+    if (!nn)
+      return n;
+
+    auto root = db::current()->create_node(db::nnid{}, false);
+    reparent(n, root);
+    reparent(nn, root);
+    return root;
+  }
 
   db::nnid pp{};
   if (nn) {
-    auto nnnode = db::current()->read(nn);
-    auto enni = calculate_enclosing_rect(nnnode);
-    db::current()->create_enni(p, nn, enni);
+    reparent(nn, p);
 
     auto pnode = db::current()->read(p);
     if (pnode.size == db::node_limit) {
@@ -58,6 +69,6 @@ void adjust_tree(db::nnid n, db::nnid nn) {
     }
   }
 
-  adjust_tree(p, pp);
+  return adjust_tree(p, pp);
 }
 } // namespace rtree
