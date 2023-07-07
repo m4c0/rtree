@@ -167,5 +167,10 @@ extern "C" int main(int argc, char **argv) {
   if (!in)
     return 2;
 
-  run_poc(in, argv[1]);
+  try {
+    run_poc(in, argv[1]);
+  } catch (db::inconsistency_error) {
+    silog::log(silog::error, "db inconsistency error");
+    return 1;
+  }
 }
