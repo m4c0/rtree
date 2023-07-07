@@ -54,6 +54,8 @@ db::nnid adjust_tree(db::nnid n, db::nnid nn) {
     auto root = db::current()->create_node(db::nnid{}, false);
     reparent(n, root);
     reparent(nn, root);
+    db::current()->set_parent(n, root);
+    db::current()->set_parent(nn, root);
     return root;
   }
 

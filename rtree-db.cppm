@@ -79,6 +79,8 @@ public:
   }
   void delete_node(nnid n) { get(n).in_use = false; }
 
+  void set_parent(nnid n, nnid p) { get(n).parent = p; }
+
   void create_enni(nnid p, nnid nn, aabb area) {
     auto &pnode = get(p);
     pnode.children[pnode.size++] = {nn, area};
