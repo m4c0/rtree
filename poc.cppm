@@ -77,7 +77,7 @@ void dump_node(FILE *out, db::nnid id, unsigned ind) {
   for (auto i = 0U; i < node.size; i++) {
     auto &[cid, area] = node.children[i];
 
-    rect(out, id.index(), area, colour, ind);
+    rect(out, cid.index(), area, colour, ind);
     if (!node.leaf)
       dump_node(out, cid, ind + 1);
   }
