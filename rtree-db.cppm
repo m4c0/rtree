@@ -47,13 +47,13 @@ class storage {
   [[nodiscard]] node &get(nnid id) {
     unsigned idx = id.index();
     if (idx >= m_nodes.size()) {
-      silog::log(silog::error, "attempt of reading node past end");
+      silog::log(silog::error, "attempt of reading node past end: %d", idx);
       throw inconsistency_error();
     }
 
     node &res = m_nodes[idx];
     if (!res.in_use) {
-      silog::log(silog::error, "attempt of reading node not in use");
+      silog::log(silog::error, "attempt of reading node not in use: %d", idx);
       throw inconsistency_error();
     }
     return res;
