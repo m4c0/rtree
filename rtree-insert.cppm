@@ -5,8 +5,8 @@ import :adjusttree;
 import :chooseleaf;
 
 namespace rtree {
-db::nnid insert(db::nnid root, db::nnid id, aabb area) {
-  auto l = choose_leaf(root, area);
+db::nnid insert(db::nnid root, db::nnid id, aabb area, int max_level = -1) {
+  auto l = choose_leaf(root, area, max_level);
   db::current()->create_enni(l, id, area);
 
   db::nnid ll{};

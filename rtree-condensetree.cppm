@@ -5,27 +5,33 @@ import :db;
 import :insert;
 
 namespace rtree {
-db::nnid condense_tree(db::nnid n) {
+struct ctres {
+  db::nnid root;
+  unsigned level;
+};
+ctres condense_tree(db::nnid n) {
   auto &node = db::current()->read(n);
   auto p = node.parent;
   if (!p)
-    return n;
+    return {n, 1};
 
   auto idx = find_n_in_parent(n, p);
   if (node.size >= db::node_lower_limit) {
     auto area = calculate_enclosing_rect(node);
     db::current()->adjust_eni(p, idx, area);
-    return condense_tree(p);
+    auto [root, lvl] = condense_tree(p);
+    return {root, lvl + 1};
   }
 
   db::current()->remove_eni(p, idx);
-  auto root = condense_tree(p);
-  // ct6 ("q" is actually the call stack)
+  auto [root, lvl] = condense_tree(p);
+
+  // ct6 ("q" is embedded in the call stack)
   for (auto i = 0U; i < node.size; i++) {
     auto &[ei, earea] = node.children[i];
-    // insert(root, ei, earea);
+    root = insert(root, ei, earea, lvl);
   }
 
-  return root;
+  return {root, lvl + 1};
 }
 } // namespace rtree
