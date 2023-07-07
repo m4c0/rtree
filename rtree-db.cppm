@@ -22,6 +22,7 @@ public:
     return m_id == o.m_id;
   }
 };
+
 struct link {
   nnid id{};
   aabb area{};
@@ -93,3 +94,12 @@ public:
 
 db::storage *&current() noexcept;
 } // namespace rtree::db
+
+namespace {
+using namespace rtree::db;
+static_assert(nnid{} == nnid{});
+static_assert(nnid{3} == nnid{3});
+static_assert(nnid{2} != nnid{3});
+static_assert(!nnid{});
+static_assert(nnid{34});
+} // namespace
