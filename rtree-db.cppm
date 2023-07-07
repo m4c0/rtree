@@ -63,11 +63,11 @@ public:
     m_nodes.add_capacity(resize_cap);
     return nnid{i};
   }
-  [[nodiscard]] nnid create_node(const node &o) {
+  [[nodiscard]] nnid create_node(nnid p, bool leaf) {
     auto res = create_node();
     auto &n = get(res);
-    n.parent = o.parent;
-    n.leaf = o.leaf;
+    n.parent = p;
+    n.leaf = leaf;
     return res;
   }
 
@@ -77,6 +77,10 @@ public:
   }
   void adjust_eni(nnid p, unsigned en, aabb area) {
     get(p).children[en].area = area;
+  }
+  void remove_eni(nnid p, unsigned en) {
+    auto pnode = get(p);
+    pnode.children[en] = pnode.children[--pnode.size];
   }
 };
 

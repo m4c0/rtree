@@ -25,22 +25,22 @@ seeds pick_seeds(const db::node &n) {
   return res;
 }
 
-inline void move_to_group(db::nnid g, db::node &copy, unsigned idx) {
-  auto &e = copy.children[idx];
+inline void move_to_group(db::nnid g, db::nnid n, unsigned idx) {
+  auto e = db::current()->read(n).children[idx];
   db::current()->create_enni(g, e.id, e.area);
-  e.id = db::nnid{};
+  db::current()->remove_eni(n, idx);
 }
 
 db::nnid split_node(db::nnid n) {
-  db::node copy = db::current()->read(n);
+  auto &node = db::current()->read(n);
 
-  auto [ei1, ei2] = pick_seeds(copy);
+  auto [ei1, ei2] = pick_seeds(node);
 
-  auto g1 = db::current()->create_node(copy);
-  move_to_group(g1, copy, ei1);
+  auto g1 = db::current()->create_node(node.parent, node.leaf);
+  move_to_group(g1, n, ei1);
 
-  auto g2 = db::current()->create_node(copy);
-  move_to_group(g2, copy, ei2);
+  auto g2 = db::current()->create_node(node.parent, node.leaf);
+  move_to_group(g2, n, ei2);
 
   return db::nnid{};
 }
