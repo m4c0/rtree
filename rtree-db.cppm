@@ -2,7 +2,7 @@ export module rtree:db;
 import :aabb;
 import hai;
 
-namespace rtree::db {
+export namespace rtree::db {
 constexpr const auto node_lower_limit = 4;
 constexpr const auto node_limit = 16;
 

@@ -66,31 +66,19 @@ void rect(FILE *out, int id, aabb area, const char *colour, unsigned ind) {
           ind, "", id, a.x, a.y, b.x - a.x, b.y - a.y, colour);
 }
 
-void dump_tree(FILE *out, const leaf *n, unsigned ind) {
-  for (const auto &d : *n) {
-    rect(out, d.id, d.area, "green", ind);
-  }
-}
-void dump_tree(FILE *out, const non_leaf *n, unsigned ind) {
-  for (const auto &d : *n) {
-    if (d->is_leaf()) {
-      rect(out, 0, d->area(), "blue", ind);
-      dump_tree(out, static_cast<const leaf *>(&*d), ind + 1);
-    } else {
-      rect(out, 0, d->area(), "red", ind);
-      dump_tree(out, static_cast<const non_leaf *>(&*d), ind + 1);
-    }
+void dump_node(FILE *out, db::nnid id, unsigned ind) {
+  const auto &node = db::current()->read(id);
+  const auto colour = node.leaf ? "blue" : "red";
+  for (auto i = 0U; i < node.size; i++) {
+    auto &[cid, area] = node.children[i];
+
+    rect(out, id.index(), area, colour, ind);
+    dump_node(out, cid, ind + 1);
   }
 }
 void dump_tree(FILE *out, const tree &t) {
   sitime::stopwatch w{};
-
-  if (t.root()->is_leaf()) {
-    dump_tree(out, static_cast<const leaf *>(&*(t.root())), 0);
-  } else {
-    dump_tree(out, static_cast<const non_leaf *>(&*(t.root())), 0);
-  }
-
+  dump_node(out, t.root(), 0);
   silog::log(silog::info, "Tree dump in %dms", w.millis());
 }
 
@@ -105,7 +93,7 @@ tree build_tree(FILE *in) {
     area.b = normie(area.b, minmax);
 
     // We could use the PLZ, but meh... forgot about it in the cleanup...
-    t.insert(i++, area);
+    t.insert(db::nnid{i++ * 10000}, area);
   });
 
   silog::log(silog::info, "Tree build in %dms", w.millis());
@@ -142,6 +130,9 @@ void test_tree(FILE *in, const tree &t) {
 }
 
 void run_poc(FILE *in, FILE *out) {
+  db::storage s{};
+  db::current() = &s;
+
   tree t = build_tree(in);
   dump_tree(out, t);
   test_tree(in, t);

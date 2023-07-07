@@ -13,7 +13,6 @@ auto rtree() {
   m->add_part("chooseleaf");
   m->add_part("quadsplit");
   m->add_part("adjusttree");
-  m->add_part("node");
   m->add_part("tree");
   return m;
 }
