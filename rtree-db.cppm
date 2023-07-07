@@ -63,6 +63,13 @@ public:
     m_nodes.add_capacity(resize_cap);
     return nnid{i};
   }
+  [[nodiscard]] nnid create_node(const node &o) {
+    auto res = create_node();
+    auto &n = get(res);
+    n.parent = o.parent;
+    n.leaf = o.leaf;
+    return res;
+  }
 
   void create_enni(nnid p, nnid nn, aabb area) {
     auto pnode = get(p);
