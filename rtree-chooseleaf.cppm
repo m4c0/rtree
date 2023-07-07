@@ -3,9 +3,9 @@ import :aabb;
 import :db;
 
 namespace rtree {
-[[nodiscard]] db::nnid choose_leaf(db::nnid n, aabb ei) {
+[[nodiscard]] db::nnid choose_leaf(db::nnid n, aabb ei, int max_level = -1) {
   auto node = db::current()->read(n);
-  if (node.leaf)
+  if (node.leaf || max_level == 0)
     return n;
 
   db::nnid f{};
@@ -22,6 +22,6 @@ namespace rtree {
       continue;
     }
   }
-  return choose_leaf(f, ei);
+  return choose_leaf(f, ei, max_level - 1);
 }
 } // namespace rtree
