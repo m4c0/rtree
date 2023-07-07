@@ -14,5 +14,6 @@ auto rtree() {
   m->add_part("quadsplit");
   m->add_part("adjusttree");
   m->add_part("tree");
+  m->add_impl("singleton");
   return m;
 }

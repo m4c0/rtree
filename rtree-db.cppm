@@ -88,8 +88,5 @@ public:
   }
 };
 
-db::storage *&current() noexcept {
-  static db::storage *i{};
-  return i;
-}
+db::storage *&current() noexcept;
 } // namespace rtree::db
