@@ -7,10 +7,6 @@ struct seeds {
   unsigned ei1;
   unsigned ei2;
 };
-struct split {
-  db::nnid g1;
-  db::nnid g2;
-};
 
 seeds pick_seeds(const db::node &n) {
   seeds res{};
@@ -76,7 +72,7 @@ inline bool should_move_to_g1(aabb g1area, aabb g2area, aabb iarea,
   return true;
 }
 
-split split_node(db::nnid n) {
+db::nnid split_node(db::nnid n) {
   // QS1
   auto &node = db::current()->read(n);
   auto [ei1, ei2] = pick_seeds(node);
@@ -92,8 +88,11 @@ split split_node(db::nnid n) {
 
     // QS2
     if (node.size == 0) {
-      db::current()->delete_node(n);
-      return split{g1, g2};
+      for (auto i = 0; i < g1node.size; i++) {
+        move_to_group(n, g1, 0);
+      }
+      db::current()->delete_node(g1);
+      return g2;
     }
     if (g1node.size + node.size <= db::node_lower_limit) {
       move_to_group(g1, n, 0);

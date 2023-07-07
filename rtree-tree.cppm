@@ -21,12 +21,8 @@ public:
     db::current()->create_enni(l, id, area);
 
     db::nnid ll{};
-    if (db::current()->read(l).size == db::node_limit) {
-      // TODO: where we add node to parent?
-      auto [g1, g2] = split_node(l);
-      l = g1;
-      ll = g2;
-    }
+    if (db::current()->read(l).size == db::node_limit)
+      ll = split_node(l);
 
     m_root = adjust_tree(l, ll);
   }

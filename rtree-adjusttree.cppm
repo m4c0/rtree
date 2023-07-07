@@ -64,11 +64,8 @@ db::nnid adjust_tree(db::nnid n, db::nnid nn) {
     reparent(nn, p);
 
     auto pnode = db::current()->read(p);
-    if (pnode.size == db::node_limit) {
-      auto [g1, g2] = split_node(p);
-      p = g1;
-      pp = g2;
-    }
+    if (pnode.size == db::node_limit)
+      pp = split_node(p);
   }
 
   return adjust_tree(p, pp);
