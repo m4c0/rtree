@@ -7,7 +7,8 @@ class pocify : public ecow::unit {
   void build_self() const override {
     std::cerr << "running poc" << std::endl;
 
-    const auto cmd = name() + " poc.svg";
+    const auto out = ecow::impl::current_target()->build_path() / "poc.svg";
+    const auto cmd = name() + " " + out.string();
     if (std::system(cmd.c_str()) != 0)
       throw std::runtime_error("Proof-of-concept failed");
   }
