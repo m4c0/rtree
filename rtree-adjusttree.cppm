@@ -31,18 +31,18 @@ aabb calculate_enclosing_rect(const db::node &node) {
 auto at3(db::nnid n) {
   auto node = db::current()->read(n);
   auto p = node.parent;
-  auto en = find_n_in_parent(n, p);
-  auto eni = calculate_enclosing_rect(node);
-  db::current()->adjust_eni(p, en, eni);
-
+  if (p) {
+    auto en = find_n_in_parent(n, p);
+    auto eni = calculate_enclosing_rect(node);
+    db::current()->adjust_eni(p, en, eni);
+  }
   return p;
 }
 
 void adjust_tree(db::nnid root, db::nnid n, db::nnid nn) {
-  if (n == root)
-    return;
-
   db::nnid p = at3(n);
+  if (!p)
+    return;
 
   db::nnid pp{};
   if (nn) {
