@@ -50,7 +50,7 @@ public:
   }
 
   [[nodiscard]] bool remove(db::nnid id, aabb area) {
-    auto l = find_leaf(id, area);
+    auto l = find_leaf(m_root, id, area);
     if (!l)
       return false;
 
