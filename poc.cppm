@@ -163,6 +163,10 @@ void clean_tree(FILE *in, tree &t) {
       throw clean_failed();
   });
 
+  if (db::current()->read(t.root()).size != 0) {
+    throw clean_failed();
+  }
+
   silog::log(silog::info, "All elements removed in %dms", w.millis());
 }
 

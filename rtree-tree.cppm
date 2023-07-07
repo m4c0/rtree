@@ -3,6 +3,7 @@ import :aabb;
 import :db;
 import :adjusttree;
 import :chooseleaf;
+import :findleaf;
 import :quadsplit;
 import hai;
 import traits;
@@ -48,7 +49,13 @@ public:
     for_each_in(m_root, area, fn);
   }
 
-  [[nodiscard]] bool remove(db::nnid id, aabb area) { return false; }
+  [[nodiscard]] bool remove(db::nnid id, aabb area) {
+    auto l = find_leaf(id, area);
+    if (!l)
+      return false;
+
+    return true;
+  }
 
   [[nodiscard]] constexpr auto root() const noexcept { return m_root; }
 };
