@@ -31,17 +31,32 @@ inline void move_to_group(db::nnid g, db::nnid n, unsigned idx) {
   db::current()->remove_eni(n, idx);
 }
 
-db::nnid split_node(db::nnid n) {
+void split_node(db::nnid n) {
+  // QS1
   auto &node = db::current()->read(n);
-
   auto [ei1, ei2] = pick_seeds(node);
-
   auto g1 = db::current()->create_node(node.parent, node.leaf);
   move_to_group(g1, n, ei1);
-
   auto g2 = db::current()->create_node(node.parent, node.leaf);
   move_to_group(g2, n, ei2);
 
-  return db::nnid{};
+  while (true) {
+    // QS2
+    auto n_size = db::current()->read(n).size;
+    if (n_size == 0) {
+      db::current()->delete_node(n);
+      break;
+    }
+    auto g1_size = db::current()->read(g1).size;
+    if (g1_size + n_size <= db::node_lower_limit) {
+      move_to_group(g1, n, 0);
+      continue;
+    }
+    auto g2_size = db::current()->read(g1).size;
+    if (g2_size + n_size <= db::node_lower_limit) {
+      move_to_group(g2, n, 0);
+      continue;
+    }
+  }
 }
 } // namespace rtree

@@ -3,6 +3,7 @@ import :aabb;
 import hai;
 
 namespace rtree::db {
+constexpr const auto node_lower_limit = 4;
 constexpr const auto node_limit = 16;
 
 class inconsistency_error {};
@@ -70,6 +71,7 @@ public:
     n.leaf = leaf;
     return res;
   }
+  void delete_node(nnid n) { get(n).in_use = false; }
 
   void create_enni(nnid p, nnid nn, aabb area) {
     auto pnode = get(p);
