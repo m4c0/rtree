@@ -1,10 +1,9 @@
 export module rtree:tree;
 import :aabb;
 import :db;
-import :adjusttree;
-import :chooseleaf;
 import :condensetree;
 import :findleaf;
+import :insert;
 import :quadsplit;
 import hai;
 import traits;
@@ -33,14 +32,7 @@ public:
       m_root = db::current()->create_node(db::nnid{}, true);
     }
 
-    auto l = choose_leaf(m_root, area);
-    db::current()->create_enni(l, id, area);
-
-    db::nnid ll{};
-    if (db::current()->read(l).size == db::node_limit)
-      ll = split_node(l);
-
-    m_root = adjust_tree(l, ll);
+    m_root = rtree::insert(m_root, id, area);
   }
 
   void for_each_in(aabb area, auto &&fn) const noexcept {
