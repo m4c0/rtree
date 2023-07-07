@@ -1,6 +1,7 @@
 export module rtree:adjusttree;
 import :aabb;
 import :db;
+import :quadsplit;
 
 namespace rtree {
 unsigned find_n_in_parent(db::nnid n, db::nnid p) {
@@ -50,7 +51,9 @@ void adjust_tree(db::nnid root, db::nnid n, db::nnid nn) {
 
     auto pnode = db::current()->read(p);
     if (pnode.size == db::node_limit) {
-      // split_node
+      auto [g1, g2] = split_node(p);
+      p = g1;
+      pp = g2;
     }
   }
 
