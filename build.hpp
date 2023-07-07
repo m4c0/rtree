@@ -9,6 +9,7 @@ auto rtree() {
   m->add_wsdep("hai", hai());
   m->add_wsdep("traits", traits());
   m->add_part("aabb");
+  m->add_part("db");
   m->add_part("node");
   m->add_part("tree");
   return m;
