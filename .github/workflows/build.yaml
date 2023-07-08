@@ -1,0 +1,26 @@
+name: build module
+on: 
+  workflow_dispatch:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os:
+          - macos-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 🧰 Setup
+        uses: m4c0/ecow/.github/actions/setup@main
+      - name: 🧀 Prepare Deps
+        uses: m4c0/rtree/.github/actions/deps@main
+      - name: 🧀 Prepare Sitime
+        uses: m4c0/sitime/.github/actions/deps@main
+      - name: 🔨 Build
+        uses: m4c0/ecow/.github/actions/compile@main
+        with:
+          project: rtree
+
