@@ -98,8 +98,6 @@ public:
     pnode.children[en] = pnode.children[--pnode.size];
   }
 };
-
-db::storage *&current() noexcept;
 } // namespace rtree::db
 
 namespace {

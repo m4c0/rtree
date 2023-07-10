@@ -4,8 +4,8 @@ import :db;
 import silog;
 
 namespace rtree {
-unsigned find_n_in_parent(db::nnid n, db::nnid p) {
-  auto pnode = db::current()->read(p);
+unsigned find_n_in_parent(db::storage *dbs, db::nnid n, db::nnid p) {
+  auto pnode = dbs->read(p);
   for (auto idx = 0U; idx < pnode.size; idx++) {
     if (pnode.children[idx].id == n)
       return idx;

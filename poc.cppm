@@ -13,6 +13,8 @@ import traits;
 
 using namespace rtree;
 
+static db::storage dbs{};
+
 void read_file(FILE *in, auto &&fn) {
   fseek(in, SEEK_SET, 0);
 
@@ -70,7 +72,7 @@ void rect(FILE *out, int id, aabb area, const char *colour, unsigned ind) {
 }
 
 void dump_node(FILE *out, db::nnid id, unsigned ind) {
-  const auto &node = db::current()->read(id);
+  const auto &node = dbs.read(id);
   const auto colour = node.leaf ? "blue" : "red";
   for (auto i = 0U; i < node.size; i++) {
     auto &[cid, area] = node.children[i];
@@ -102,7 +104,7 @@ void dump_tree(const char *fn, const tree &t) {
 
 tree build_tree(FILE *in) {
   sitime::stopwatch w{};
-  tree t{};
+  tree t{&dbs};
 
   const aabb minmax = find_minmax(in);
   unsigned i = 100;
@@ -163,7 +165,7 @@ void clean_tree(FILE *in, tree &t) {
       throw clean_failed();
   });
 
-  if (db::current()->read(t.root()).size != 0) {
+  if (dbs.read(t.root()).size != 0) {
     throw clean_failed();
   }
 
@@ -171,9 +173,6 @@ void clean_tree(FILE *in, tree &t) {
 }
 
 void run_poc(FILE *in, const char *out) {
-  db::storage s{};
-  db::current() = &s;
-
   tree t = build_tree(in);
   dump_tree(out, t);
   test_tree(in, t);

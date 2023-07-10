@@ -40,13 +40,14 @@ unsigned pick_next(const db::node &n, aabb g1a, aabb g2a) {
   return res;
 }
 
-inline aabb move_to_group(db::nnid g, db::nnid n, unsigned idx) {
-  auto node = db::current()->read(n);
+inline aabb move_to_group(db::storage *dbs, db::nnid g, db::nnid n,
+                          unsigned idx) {
+  auto node = dbs->read(n);
   auto e = node.children[idx];
-  db::current()->create_enni(g, e.id, e.area);
-  db::current()->remove_eni(n, idx);
+  dbs->create_enni(g, e.id, e.area);
+  dbs->remove_eni(n, idx);
   if (!node.leaf)
-    db::current()->set_parent(e.id, g);
+    dbs->set_parent(e.id, g);
   return e.area;
 }
 
@@ -75,40 +76,40 @@ inline bool should_move_to_g1(aabb g1area, aabb g2area, aabb iarea,
   return true;
 }
 
-db::nnid split_node(db::nnid n) {
+db::nnid split_node(db::storage *dbs, db::nnid n) {
   // QS1
-  auto &node = db::current()->read(n);
+  auto &node = dbs->read(n);
   auto [ei1, ei2] = pick_seeds(node);
   if (ei1 < ei2) {
     auto tmp = ei1;
     ei1 = ei2;
     ei2 = tmp;
   }
-  auto g1 = db::current()->create_node(node.parent, node.leaf);
-  auto g1area = move_to_group(g1, n, ei1);
-  auto g2 = db::current()->create_node(node.parent, node.leaf);
-  auto g2area = move_to_group(g2, n, ei2);
+  auto g1 = dbs->create_node(node.parent, node.leaf);
+  auto g1area = move_to_group(dbs, g1, n, ei1);
+  auto g2 = dbs->create_node(node.parent, node.leaf);
+  auto g2area = move_to_group(dbs, g2, n, ei2);
 
   while (true) {
-    auto &node = db::current()->read(n);
-    auto &g1node = db::current()->read(g1);
-    auto &g2node = db::current()->read(g2);
+    auto &node = dbs->read(n);
+    auto &g1node = dbs->read(g1);
+    auto &g2node = dbs->read(g2);
 
     // QS2
     if (node.size == 0) {
       // Running in reverse to avoid getting updated g1node.size
       for (auto i = g1node.size; i > 0; i--) {
-        move_to_group(n, g1, 0);
+        move_to_group(dbs, n, g1, 0);
       }
-      db::current()->delete_node(g1);
+      dbs->delete_node(g1);
       return g2;
     }
     if (g1node.size + node.size <= db::node_lower_limit) {
-      move_to_group(g1, n, 0);
+      move_to_group(dbs, g1, n, 0);
       continue;
     }
     if (g2node.size + node.size <= db::node_lower_limit) {
-      move_to_group(g2, n, 0);
+      move_to_group(dbs, g2, n, 0);
       continue;
     }
 
@@ -117,10 +118,10 @@ db::nnid split_node(db::nnid n) {
     auto iarea = node.children[idx].area;
 
     if (should_move_to_g1(g1area, g2area, iarea, g1node, g2node)) {
-      move_to_group(g1, n, idx);
+      move_to_group(dbs, g1, n, idx);
       g1area = merge(g1area, iarea);
     } else {
-      move_to_group(g2, n, idx);
+      move_to_group(dbs, g2, n, idx);
       g2area = merge(g2area, iarea);
     }
   }
