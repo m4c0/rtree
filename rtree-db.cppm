@@ -44,7 +44,7 @@ class storage {
 
   hai::array<node> m_nodes{initial_cap};
 
-  [[nodiscard]] node &get(nnid id) {
+  [[nodiscard]] constexpr node &get(nnid id) {
     unsigned idx = id.index();
     if (idx >= m_nodes.size()) {
       silog::log(silog::error, "attempt of reading node past end: %d", idx);
@@ -59,7 +59,7 @@ class storage {
     return res;
   }
 
-  [[nodiscard]] nnid find_unused_node() {
+  [[nodiscard]] constexpr nnid find_unused_node() {
     for (auto i = 0U; i < m_nodes.size(); i++) {
       auto &n = m_nodes[i];
       if (!n.in_use) {
@@ -72,9 +72,9 @@ class storage {
   }
 
 public:
-  [[nodiscard]] const node &read(nnid id) { return get(id); }
+  [[nodiscard]] constexpr const node &read(nnid id) { return get(id); }
 
-  [[nodiscard]] nnid create_node(nnid p, bool leaf) {
+  [[nodiscard]] constexpr nnid create_node(nnid p, bool leaf) {
     auto res = find_unused_node();
     auto &n = m_nodes[res.index()];
     n.parent = p;
@@ -82,18 +82,18 @@ public:
     n.in_use = true;
     return res;
   }
-  void delete_node(nnid n) { get(n) = {}; }
+  constexpr void delete_node(nnid n) { get(n) = {}; }
 
-  void set_parent(nnid n, nnid p) { get(n).parent = p; }
+  constexpr void set_parent(nnid n, nnid p) { get(n).parent = p; }
 
-  void create_enni(nnid p, nnid nn, aabb area) {
+  constexpr void create_enni(nnid p, nnid nn, aabb area) {
     auto &pnode = get(p);
     pnode.children[pnode.size++] = {nn, area};
   }
-  void adjust_eni(nnid p, unsigned en, aabb area) {
+  constexpr void adjust_eni(nnid p, unsigned en, aabb area) {
     get(p).children[en].area = area;
   }
-  void remove_eni(nnid p, unsigned en) {
+  constexpr void remove_eni(nnid p, unsigned en) {
     auto &pnode = get(p);
     pnode.children[en] = pnode.children[--pnode.size];
   }

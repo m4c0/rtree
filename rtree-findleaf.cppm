@@ -3,7 +3,8 @@ import :aabb;
 import :db;
 
 namespace rtree {
-db::nnid find_leaf(db::storage *dbs, db::nnid t, db::nnid eid, aabb earea) {
+constexpr db::nnid find_leaf(db::storage *dbs, db::nnid t, db::nnid eid,
+                             aabb earea) {
   auto tn = dbs->read(t);
   if (!tn.leaf) {
     for (auto i = 0U; i < tn.size; i++) {

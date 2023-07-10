@@ -4,7 +4,7 @@ import :db;
 import silog;
 
 namespace rtree {
-unsigned find_n_in_parent(db::storage *dbs, db::nnid n, db::nnid p) {
+constexpr unsigned find_n_in_parent(db::storage *dbs, db::nnid n, db::nnid p) {
   auto pnode = dbs->read(p);
   for (auto idx = 0U; idx < pnode.size; idx++) {
     if (pnode.children[idx].id == n)
@@ -15,7 +15,7 @@ unsigned find_n_in_parent(db::storage *dbs, db::nnid n, db::nnid p) {
   throw db::inconsistency_error{};
 }
 
-aabb calculate_enclosing_rect(const db::node &node) {
+constexpr aabb calculate_enclosing_rect(const db::node &node) {
   aabb eni{
       .a = {9e10f, 9e10f},
       .b = {-9e10f, -9e10f},

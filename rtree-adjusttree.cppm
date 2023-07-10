@@ -6,7 +6,7 @@ import :quadsplit;
 import silog;
 
 namespace rtree {
-auto at3(db::storage *dbs, db::nnid n) {
+constexpr auto at3(db::storage *dbs, db::nnid n) {
   auto node = dbs->read(n);
   auto p = node.parent;
   if (p) {
@@ -17,13 +17,13 @@ auto at3(db::storage *dbs, db::nnid n) {
   return p;
 }
 
-void reparent(db::storage *dbs, db::nnid n, db::nnid p) {
+constexpr void reparent(db::storage *dbs, db::nnid n, db::nnid p) {
   auto node = dbs->read(n);
   auto area = calculate_enclosing_rect(node);
   dbs->create_enni(p, n, area);
 }
 
-db::nnid adjust_tree(db::storage *dbs, db::nnid n, db::nnid nn) {
+constexpr db::nnid adjust_tree(db::storage *dbs, db::nnid n, db::nnid nn) {
   db::nnid p = at3(dbs, n);
   if (!p) {
     if (!nn)

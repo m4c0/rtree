@@ -13,7 +13,7 @@ class tree {
   db::storage *m_storage{};
   db::nnid m_root{};
 
-  void for_each_in(db::nnid n, aabb area, auto &fn) const noexcept {
+  constexpr void for_each_in(db::nnid n, aabb area, auto &fn) const noexcept {
     auto &node = m_storage->read(n);
     for (auto i = 0U; i < node.size; i++) {
       auto &e = node.children[i];
@@ -30,7 +30,7 @@ class tree {
 public:
   explicit constexpr tree(db::storage *s) : m_storage{s} {}
 
-  void insert(db::nnid id, aabb area) {
+  constexpr void insert(db::nnid id, aabb area) {
     if (!m_root) {
       m_root = m_storage->create_node(db::nnid{}, true);
     }
@@ -38,14 +38,14 @@ public:
     m_root = rtree::insert(m_storage, m_root, id, area);
   }
 
-  void for_each_in(aabb area, auto &&fn) const noexcept {
+  constexpr void for_each_in(aabb area, auto &&fn) const noexcept {
     if (!m_root)
       return;
 
     for_each_in(m_root, area, fn);
   }
 
-  [[nodiscard]] bool remove(db::nnid id, aabb area) {
+  [[nodiscard]] constexpr bool remove(db::nnid id, aabb area) {
     auto l = find_leaf(m_storage, m_root, id, area);
     if (!l)
       return false;
