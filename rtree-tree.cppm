@@ -67,5 +67,6 @@ public:
   }
 
   [[nodiscard]] constexpr auto root() const noexcept { return m_root; }
+  constexpr void set_root(db::nnid r) noexcept { m_root = r; }
 };
 } // namespace rtree
